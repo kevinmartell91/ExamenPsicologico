@@ -1,0 +1,143 @@
+
+PRIORIDAD
+Asistencia de voluntarios   (Antes de quicena de abril) -> Terminar de implementarlo Phyton
+=========================
+
+
+Perfiles 
+
+Voluntarios
+============
+	
+	Resgistro de intension de asistencia (Lun - Vie)
+
+
+
+
+Coordinador de voluntarios
+==========================
+	Encargado de tomar asistencia (Sabado y domingo
+
+
+Jorge Poma (Anterior )
+Jhonatan (quiere apoyar)	
+
+
+
+Pendiente
+==========
+ERP DEMO -> Envio de Demos a Agustin
+
+
+Por Confirmar
+=============
+Credenciales de Hosting de Voluntades - me lo facilitara Augustin. 
+
+Si tienen Cuenta Google (Conmite de gestión)
+	Google Site  		-> Gestor de conocimientos y Centralizar la informacion.
+	Gooogle Calendar	-> 
+	Google Encuesta 	-> brinda resultado indivuduales
+
+Por investigar
+==============
+Automatizar encuesta por prosemiento de imagen.
+Encuestas online -> POR QUE NO ? perdida de voluntarios
+Migrar datos personales de un correo a otro.
+
+ERP + APP de asistencia(phyton) APUNTADO CON UNA 
+
+
+
+
+
+====== REUNION 10 de febrero
+
+
+
+
+
+
+vista completa
+B 201 - 255
+G 3  - 154
+R 143 - 224
+
+area mas cerca
+B 169 - 206
+G 121 - 152
+R 91 - 171
+
+area mas cerca (canny(50,300))
+B 134 - 255
+G 84 - 155
+R 73 - 180
+
+
+area mas cerca (canny(50,400), houghCircles(341,12))
+B 0 - 255
+G 0 - 161
+R 100 - 180
+
+///////////////////////////////////////////////////  calibracion para los test psicologicos
+//Opcion 1  - Azul
+area mas cerca (canny(300,276), houghCircles(1,9))
+B 104 - 255
+G 27 - 63
+R 0 - 167
+
+Min dist = 16
+Min radio = 4
+Max radio = 7
+
+
+//Opcion 2 - Rojo - 1
+area mas cerca (canny(300,276), houghCircles(1,9))
+B 74 - 139
+G 0 - 116
+R 167 - 232
+
+//Opcion 2 - Rojo -
+area mas cerca (canny(166,399), houghCircles(1,14))
+B 28 - 181
+G 46 - 147
+R 162 - 202
+
+//Opcion 3  - Lapiz 2B
+area mas cerca (canny(166,399), houghCircles(1,14))
+B 104 - 139
+G 96 - 135
+R 103 - 149	
+
+
+//Opcion 4 - Negro
+//area mas cerca (canny(50,400), houghCircles(56,8))
+area mas cerca (canny(166,399), houghCircles(1,14))
+B 42 - 88
+G 46 - 135
+R 76 - 122
+
+
+///////////////////////////////////////////////////  calibracion para los test leds   GREEN  - STATIC IMAGE
+area mas cerca (canny(50,400), houghCircles(341,12))
+B 172 - 255
+G 0 - 255
+R 0 - 122
+
+
+area mas cerca (canny(244,1), houghCircles(211,1))
+B 190 - 255
+G 209 - 255
+R 34 - 121
+
+area mas cerca (canny(243,27), houghCircles(20,300))   //ok
+H 75  - 108
+S 79 - 179
+V 106 - 255
+
+
+
+///////////////////////////////////////////////////  calibracion para los test leds   GREEN  - VIDEO INPUT
+area mas cerca (canny(50,400), houghCircles(341,12))
+B 75 - 187
+G 3 - 46
+R 225 - 255

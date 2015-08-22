@@ -1,0 +1,204 @@
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_calib3d240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_contrib240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_core240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_features2d240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ffmpeg240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_flann240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_gpu240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_highgui240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_imgproc240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_legacy240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ml240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_nonfree240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_objdetect240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_photo240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_stitching240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_video240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_videostab240.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.exe
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.pdb
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.DebuggerVisualizers.VS2010.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ZedGraph.dll
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.xml
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csprojResolveAssemblyReference.cache
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Form1.resources
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Properties.Resources.resources
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csproj.GenerateResource.Cache
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.exe
+D:\Projects\Learning\MyProjects\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.pdb
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.exe
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.pdb
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_calib3d240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_contrib240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_core240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_features2d240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ffmpeg240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_flann240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_gpu240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_highgui240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_imgproc240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_legacy240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ml240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_nonfree240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_objdetect240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_photo240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_stitching240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_video240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_videostab240.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.exe
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.pdb
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.DebuggerVisualizers.VS2010.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ZedGraph.dll
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.xml
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csprojResolveAssemblyReference.cache
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Form1.resources
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Properties.Resources.resources
+C:\Users\kevin\Desktop\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csproj.GenerateResource.Cache
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_calib3d240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_contrib240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_core240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_features2d240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ffmpeg240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_flann240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_gpu240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_highgui240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_imgproc240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_legacy240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_ml240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_nonfree240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_objdetect240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_photo240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_stitching240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_video240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\opencv_videostab240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.DebuggerVisualizers.VS2010.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\ZedGraph.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\bin\Debug\Emgu.Util.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Form1.resources
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Properties.Resources.resources
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csproj.GenerateResource.Cache
+E:\Voluntades\Desarrollo\ExamenPsicoligico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csprojResolveAssemblyReference.cache
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_calib3d240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_contrib240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_core240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_features2d240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_ffmpeg240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_flann240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_gpu240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_highgui240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_imgproc240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_legacy240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_ml240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_nonfree240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_objdetect240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_photo240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_stitching240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_video240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\opencv_videostab240.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.DebuggerVisualizers.VS2010.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.Util.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\ZedGraph.dll
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\bin\Debug\Emgu.Util.xml
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csprojResolveAssemblyReference.cache
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Form1.resources
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Properties.Resources.resources
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csproj.GenerateResource.Cache
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\ExamenPsicoligico - Mayas movibles - Calibracion manual\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_calib3d240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_contrib240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_core240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_features2d240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_ffmpeg240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_flann240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_highgui240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_imgproc240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_legacy240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_ml240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_nonfree240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_objdetect240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_photo240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_stitching240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_video240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\opencv_videostab240.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.exe
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\ExamenPsicoligico.pdb
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.DebuggerVisualizers.VS2010.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.Util.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\ZedGraph.dll
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.GPU.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.ML.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.OCR.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.Stitching.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.CV.UI.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\bin\Debug\Emgu.Util.xml
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csprojResolveAssemblyReference.cache
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Form1.resources
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.Properties.Resources.resources
+E:\Voluntades\Desarrollo\repoGit\ExamenPsicologico\ExamenPsicoligico\obj\x86\Debug\ExamenPsicoligico.csproj.GenerateResource.Cache
