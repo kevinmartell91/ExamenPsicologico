@@ -24,6 +24,7 @@ namespace ExamenPsicoligico
         Capture capWebCam;
         OpenFileDialog open;
         List<Image<Bgr, Byte>> images;
+        List<String> imagesNames; 
         Image<Bgr, Byte> imgInputFrame;
         Image<Gray, Byte> imgProcessed;
         Image<Gray, Byte> imgProcessedCanny;
@@ -298,18 +299,24 @@ namespace ExamenPsicoligico
 
         public void CreateColumnsAndData()
         {
+             
+            
             for (int i = 0; i <= 175 + 7; i++)
             {
-                if (i == 0) dataGridView1.Columns.Add("Col_0", "DNI");
-                if (i == 1) dataGridView1.Columns.Add("Col_0", "Opc.Alb.01");
-                if (i == 2) dataGridView1.Columns.Add("Col_0", "Opc.Alb.02");
-                if (i == 3) dataGridView1.Columns.Add("Col_0", "Sede");
-                if (i == 4) dataGridView1.Columns.Add("Col_0", "Ciclo_num_01");
-                if (i == 5) dataGridView1.Columns.Add("Col_0", "Ciclo_num_02");
-                if (i == 6) dataGridView1.Columns.Add("Col_0", "Semestre");
-                if (i == 7) dataGridView1.Columns.Add("Col_0", "Turno");
+                if (i == 0) { dataGridView1.Columns.Add("Col_0", "DNI"); dataGridView1.Columns[i].Width = 60; }
+                if (i == 1) { dataGridView1.Columns.Add("Col_0", "Alb-1"); dataGridView1.Columns[i].Width = 36; }
+                if (i == 2) { dataGridView1.Columns.Add("Col_0", "Alb-2"); dataGridView1.Columns[i].Width = 36; }
+                if (i == 3) { dataGridView1.Columns.Add("Col_0", "Sede"); dataGridView1.Columns[i].Width = 34; }
+                if (i == 4) { dataGridView1.Columns.Add("Col_0", "Cic-01"); dataGridView1.Columns[i].Width = 39; }
+                if (i == 5) { dataGridView1.Columns.Add("Col_0", "Cic-02"); dataGridView1.Columns[i].Width = 39; }
+                if (i == 6) { dataGridView1.Columns.Add("Col_0", "Semes"); dataGridView1.Columns[i].Width = 39; }
+                if (i == 7) { dataGridView1.Columns.Add("Col_0", "Turno"); dataGridView1.Columns[i].Width = 36; }
 
-                if (i >= 8) { dataGridView1.Columns.Add("Col_" + i.ToString(), "Pregunta " + i.ToString()); }
+                if (i >= 8) { 
+                    dataGridView1.Columns.Add("Col_" + i.ToString(), (i-7).ToString());
+                    dataGridView1.Columns[i].Width = 30;
+                }
+                
             }
 
 
@@ -383,36 +390,34 @@ namespace ExamenPsicoligico
 
         #region Mayas technique
 
-        List<Circle> mayas;
-
+        int numMayas;
+        List<Circle> mayas_corner;
 
         List<AbstractObject> lstAbsDNI;
         AbstractObject abs_aux_DNI;
-
-
 
         List<AbstractQuestion> lstAbsQuestions;
         AbstractQuestion abs_question;
         AbstractQuestion abs_aux_question;
 
-
         List<AbstractObject> lstAbsOptions;
         AbstractObject abs_aux_option;
 
-
-        List<AbstractObject> lstSede;
+        List<AbstractObject> lstAbsSede;
         AbstractObject abs_aux_sede;
 
-
-        List<AbstractObject> lstCiclo;
+        List<AbstractObject> lstAbsCiclo;
         AbstractObject abs_aux_ciclo;
 
-
-        List<AbstractObject> lstSemestre;
+        List<AbstractObject> lstAbsSemestre;
         AbstractObject abs_aux_semestre;
 
-        List<AbstractObject> lstTurno;
+        List<AbstractObject> lstAbsTurno;
         AbstractObject abs_aux_turno;
+
+        List<AbstractQuestion> lstAbsBigMaya;
+        AbstractQuestion abs_big_maya;
+        AbstractQuestion abs_aux_big_maya;
 
         public bool flag_init;
         Contour<System.Drawing.Point> contours;
@@ -421,6 +426,12 @@ namespace ExamenPsicoligico
         float scala_x;
         float scala_y;
 
+        int FILAS;
+        int COLUMNAS;
+        int LIMITE_AREA_RESPUESTA;
+
+        List<MCvBox2D> listSquares;
+        
 
         public struct AbstractObject
         {
@@ -563,17 +574,23 @@ namespace ExamenPsicoligico
         {
             public float x;
             public float y;
+            public float area;
 
-            public CountorsPositions(float x, float y)
+            public CountorsPositions(float x, float y, float area)
             {
                 this.x = x;
                 this.y = y;
+                this.area = area;
             }
         }
         Pen my_pen;
 
+        string empty;
+
         #endregion
 
+        public delegate void MyEvent(object sender, object param);
+        event MyEvent OnMyEvent;
 
         public Form1()
         {
@@ -602,7 +619,7 @@ namespace ExamenPsicoligico
             btnOpenFile.Enabled = false;
             btnPause.Enabled = true;
             Pause = false;
-            BeginProcess = false;
+            BeginProcess = true;
             allProcessed = false;
 
             timer1.Enabled = false;
@@ -615,6 +632,7 @@ namespace ExamenPsicoligico
 
 
             images = new List<Image<Bgr, byte>>();
+            imagesNames = new List<string>();
             questions = new List<Question>();
             applicants = new List<Applicant>();
 
@@ -637,11 +655,15 @@ namespace ExamenPsicoligico
 
             #region Mayas inicialization  -> 3 in total
 
+            FILAS = 48;
+            COLUMNAS = 28;
+            txtTotalApplicants.Text = "1000";
+            LIMITE_AREA_RESPUESTA = 350;
+            numMayas = 4;
+
             flag_init = false;
 
-
-            scala_x = (float)(2476 * 1.0 / pictureBox1.Width);
-            scala_y = (float)(3508 * 1.0/ pictureBox1.Height);
+            
 
             opcion_01 = -1;
             opcion_02 = -1;
@@ -650,113 +672,114 @@ namespace ExamenPsicoligico
             num_02 = -1;
             codigo_semestre = -1;
             codigo_turno = -1;
-
+            empty = "";
 
             // Dimension of picture box ->   578, 708
 
-            #region Dyniamic inicialization of the mayas
+            #region ORIGINAL Dynamic inicialization of the mayas_corner
 
-            int numMayas = 3;
-            mayas = new List<Circle>();
-
-
-            int count = 0;
-            for (int k = 0; k < numMayas; k++)
-            {
-
-                Circle lstCirculos = new Circle();
-                Circle circulo_0 = new Circle();
-                Circle circulo_1 = new Circle();
-                Circle circulo_2 = new Circle();
-                Circle circulo_3 = new Circle();
-
-                int lineasHorizontales = 0;
-                int lineasVerticales = 0;
-
-                lstCirculos.circles.Add(circulo_0);
-                lstCirculos.circles.Add(circulo_1);
-                lstCirculos.circles.Add(circulo_2);
-                lstCirculos.circles.Add(circulo_3);
+            //int numMayas = 3;
+            //mayas_corner = new List<Circle>();
 
 
-                for (int j = 0; j < 2; j++)
-                {
+            //int count = 0;
+            //for (int k = 0; k < numMayas; k++)
+            //{
 
-                    for (int i = 0; i < 2; i++)
-                    {
-                        int index = j * 2 + i;
+            //    Circle lstCirculos = new Circle();
+            //    Circle circulo_0 = new Circle();
+            //    Circle circulo_1 = new Circle();
+            //    Circle circulo_2 = new Circle();
+            //    Circle circulo_3 = new Circle();
 
-                        // Mayas ubications
+            //    int lineasHorizontales = 0;
+            //    int lineasVerticales = 0;
 
-                        if (k == 0) // codigo
-                        {
-                            lineasHorizontales = 9;
-                            lineasVerticales = 7;
-                            lstCirculos.circles[index].set_X((i * 93) + 376);
-                            lstCirculos.circles[index].set_Y((j * 95) + 121);
-                        }
-                        if (k == 1) // opcion albergue
-                        {
-                            lineasHorizontales = 4;
-                            lineasVerticales = 1;
-                            lstCirculos.circles[index].set_X((i * 14) + 308);
-                            lstCirculos.circles[index].set_Y((j * 42) + 163); // 8.4
-                        }
-                        //if (k == 2) // sede
-                        //{
-                        //    lineasHorizontales = 4;
-                        //    lineasVerticales = 1;
-                        //    lstCirculos.circles[index].set_X((i * 13) + 116);
-                        //    lstCirculos.circles[index].set_Y((j * 43) + 243);
-                        //}
-                        //if (k == 3) //anio
-                        //{
-                        //    lineasHorizontales = 9;
-                        //    lineasVerticales = 1;
-                        //    lstCirculos.circles[index].set_X((i * 15) + 116);
-                        //    lstCirculos.circles[index].set_Y((j * 97) + 328);
-                        //}
-                        //if (k == 4) // ciclo y turno 
-                        //{
-                        //    lineasHorizontales = 1;
-                        //    lineasVerticales = 1;
-                        //    lstCirculos.circles[index].set_X((i * 15) + 116);
-                        //    lstCirculos.circles[index].set_Y((j * 42) + 470);
-                        //}
-                        if (k >= 2) //respuestas
-                        {
-                            //lineasHorizontales = 34;
-                            //lineasVerticales = 2;
-                            //lstCirculos.circles[index].set_X((i * 13) + 185     +   (spaceColumnsAnswers * count)) ;
-                            //lstCirculos.circles[index].set_Y((j * 368) + 242);
+            //    lstCirculos.circles.Add(circulo_0);
+            //    lstCirculos.circles.Add(circulo_1);
+            //    lstCirculos.circles.Add(circulo_2);
+            //    lstCirculos.circles.Add(circulo_3);
 
 
-                            //implented just for answers
-                            //lineasHorizontales = 34;
-                            //lineasVerticales = 21;
-                            //lstCirculos.circles[index].set_X((i * 289) + 185 );
-                            //lstCirculos.circles[index].set_Y((j * 368) + 242);
+            //    for (int j = 0; j < 2; j++)
+            //    {
 
-                            //
-                            lineasHorizontales = 34;
-                            lineasVerticales = 26;
-                            lstCirculos.circles[index].set_X((i * 347) + 121);
-                            lstCirculos.circles[index].set_Y((j * 356) + 246);
+            //        for (int i = 0; i < 2; i++)
+            //        {
+            //            int index = j * 2 + i;
 
-                        }
-                    }
-                }
-                lstCirculos.set_X(lineasVerticales);
-                lstCirculos.set_Y(lineasHorizontales);
-                mayas.Add(lstCirculos);
-                if (k >= 5)
-                    count++;
-            }
+            //            // Mayas ubications in pixels  ERG : (i * 93) + 376
+
+            //            if (k == 0) // DNI
+            //            {
+            //                lineasHorizontales = 9;
+            //                lineasVerticales = 7;
+            //                lstCirculos.circles[index].set_X((i * 93) + 376);
+            //                lstCirculos.circles[index].set_Y((j * 95) + 121);
+            //            }
+            //            if (k == 1) // Opcion Albergue
+            //            {
+            //                lineasHorizontales = 4;
+            //                lineasVerticales = 1;
+            //                lstCirculos.circles[index].set_X((i * 14) + 308);
+            //                lstCirculos.circles[index].set_Y((j * 42) + 163); // 8.4
+            //            }
+            //            //if (k == 2) // sede
+            //            //{
+            //            //    lineasHorizontales = 4;
+            //            //    lineasVerticales = 1;
+            //            //    lstCirculos.circles[index].set_X((i * 13) + 116);
+            //            //    lstCirculos.circles[index].set_Y((j * 43) + 243);
+            //            //}
+            //            //if (k == 3) //anio
+            //            //{
+            //            //    lineasHorizontales = 9;
+            //            //    lineasVerticales = 1;
+            //            //    lstCirculos.circles[index].set_X((i * 15) + 116);
+            //            //    lstCirculos.circles[index].set_Y((j * 97) + 328);
+            //            //}
+            //            //if (k == 4) // ciclo y turno 
+            //            //{
+            //            //    lineasHorizontales = 1;
+            //            //    lineasVerticales = 1;
+            //            //    lstCirculos.circles[index].set_X((i * 15) + 116);
+            //            //    lstCirculos.circles[index].set_Y((j * 42) + 470);
+            //            //}
+            //            if (k >= 2) //respuestas
+            //            {
+            //                //lineasHorizontales = 34;
+            //                //lineasVerticales = 2;
+            //                //lstCirculos.circles[index].set_X((i * 13) + 185     +   (spaceColumnsAnswers * count)) ;
+            //                //lstCirculos.circles[index].set_Y((j * 368) + 242);
+
+
+            //                //implented just for answers
+            //                //lineasHorizontales = 34;
+            //                //lineasVerticales = 21;
+            //                //lstCirculos.circles[index].set_X((i * 289) + 185 );
+            //                //lstCirculos.circles[index].set_Y((j * 368) + 242);
+
+            //                //
+            //                lineasHorizontales = 34;
+            //                lineasVerticales = 26;
+            //                lstCirculos.circles[index].set_X((i * 347) + 121);
+            //                lstCirculos.circles[index].set_Y((j * 356) + 246);
+
+            //            }
+            //        }
+            //    }
+            //    lstCirculos.set_X(lineasVerticales);
+            //    lstCirculos.set_Y(lineasHorizontales);
+            //    mayas_corner.Add(lstCirculos);
+            //    if (k >= 5)
+            //        count++;
+            //}
 
             #endregion
 
+            Inicialization_BigMaya();
 
-            // the same nnumber of num of mayas
+            // the same nnumber of num of mayas_corner
 
             #region Dynamic inicialization of lstAbsDIN
 
@@ -771,7 +794,7 @@ namespace ExamenPsicoligico
 
                     abs_aux_DNI.set_idQuestion(i);
                     abs_aux_DNI.set_respuesta(-1);
-                    abs_aux_DNI.set_radio(9.7f);
+                    abs_aux_DNI.set_radio(8.7f);
                     abs_aux_DNI.set_id(pos);
 
                     lstAbsDNI.Add(abs_aux_DNI);
@@ -809,7 +832,7 @@ namespace ExamenPsicoligico
 
                     abs_aux_option.set_idQuestion(i);
                     abs_aux_option.set_respuesta(-1);
-                    abs_aux_option.set_radio(9.7f);
+                    abs_aux_option.set_radio(8.7f);
                     abs_aux_option.set_id(pos);
 
                     lstAbsOptions.Add(abs_aux_option);
@@ -820,7 +843,7 @@ namespace ExamenPsicoligico
 
             #region Dynamic inicialization of lstSede
 
-            lstSede = new List<AbstractObject>();
+            lstAbsSede = new List<AbstractObject>();
             abs_aux_sede = new AbstractObject();
 
             for (int i = 0; i < 5; i++)
@@ -829,17 +852,17 @@ namespace ExamenPsicoligico
 
                 abs_aux_sede.set_id(i);
                 abs_aux_sede.set_idQuestion(i);
-                abs_aux_sede.set_radio(9.7f);
+                abs_aux_sede.set_radio(8.7f);
                 abs_aux_sede.set_respuesta(-1);
 
-                lstSede.Add(abs_aux_sede);
+                lstAbsSede.Add(abs_aux_sede);
 
             }
             #endregion
 
             #region Dynamic inicialization of lstCiclo
 
-            lstCiclo = new List<AbstractObject>();
+            lstAbsCiclo = new List<AbstractObject>();
             abs_aux_ciclo = new AbstractObject();
 
             for (int i = 0; i < 10; i++)
@@ -850,10 +873,10 @@ namespace ExamenPsicoligico
 
                     abs_aux_ciclo.set_id(pos);
                     abs_aux_ciclo.set_idQuestion(i);
-                    abs_aux_ciclo.set_radio(9.7f);
+                    abs_aux_ciclo.set_radio(8.7f);
                     abs_aux_ciclo.set_respuesta(-1);
 
-                    lstCiclo.Add(abs_aux_ciclo);
+                    lstAbsCiclo.Add(abs_aux_ciclo);
 
                 }
 
@@ -862,31 +885,46 @@ namespace ExamenPsicoligico
 
             #region Inicialization of lstSemestre
 
-            lstSemestre = new List<AbstractObject>();
+            lstAbsSemestre = new List<AbstractObject>();
             abs_aux_semestre = new AbstractObject();
             for (int i = 0; i < 2; i++)
             {
                 abs_aux_semestre.set_id(i);
                 abs_aux_semestre.set_idQuestion(i);
-                abs_aux_semestre.set_radio(9.7f);
+                abs_aux_semestre.set_radio(8.7f);
                 abs_aux_semestre.set_respuesta(-1);
 
-                lstSemestre.Add(abs_aux_semestre);
+                lstAbsSemestre.Add(abs_aux_semestre);
             }
 
             #endregion
 
             #region Inicialization of lstTurno
-            lstTurno = new List<AbstractObject>();
+            lstAbsTurno = new List<AbstractObject>();
             abs_aux_turno = new AbstractObject();
             for (int i = 0; i < 2; i++)
             {
                 abs_aux_turno.set_id(i);
                 abs_aux_turno.set_idQuestion(i);
-                abs_aux_turno.set_radio(9.7f);
+                abs_aux_turno.set_radio(8.7f);
                 abs_aux_turno.set_respuesta(-1);
 
-                lstTurno.Add(abs_aux_turno);
+                lstAbsTurno.Add(abs_aux_turno);
+            }
+
+            #endregion
+
+            #region Dynamic inicialization of lstAbsBigMaya
+
+            lstAbsBigMaya = new List<AbstractQuestion>();
+            abs_big_maya = new AbstractQuestion();
+            abs_aux_big_maya = new AbstractQuestion();
+
+
+            for (int i = 0; i < COLUMNAS*FILAS; i++)
+            {
+                AbstractQuestion aq = new AbstractQuestion();
+                lstAbsBigMaya.Add(aq);
             }
 
             #endregion
@@ -901,9 +939,156 @@ namespace ExamenPsicoligico
 
         }
 
-        #region Methods for imagane procesing in general
+        
+         #region Methods for image procesing in general
+
+        public void set_drag_points_of_mayas_dni(PointF p1, PointF p2, PointF p3, PointF p4)
+        {
+
+          
+            mayas_corner[0].circles[0].set_X(p1.X);
+            mayas_corner[0].circles[0].set_Y(p1.Y);
+            mayas_corner[0].circles[1].set_X(p2.X);
+            mayas_corner[0].circles[1].set_Y(p2.Y);
+            mayas_corner[0].circles[2].set_X(p3.X);
+            mayas_corner[0].circles[2].set_Y(p3.Y);
+            mayas_corner[0].circles[3].set_X(p4.X);
+            mayas_corner[0].circles[3].set_Y(p4.Y);
+
+            
+        }
+      
+        public void set_drag_points_of_mayas_options(PointF p1, PointF p2, PointF p3, PointF p4)
+        {
 
 
+            mayas_corner[1].circles[0].set_X(p1.X);
+            mayas_corner[1].circles[0].set_Y(p1.Y);
+            mayas_corner[1].circles[1].set_X(p2.X);
+            mayas_corner[1].circles[1].set_Y(p2.Y);
+            mayas_corner[1].circles[2].set_X(p3.X);
+            mayas_corner[1].circles[2].set_Y(p3.Y);
+            mayas_corner[1].circles[3].set_X(p4.X);
+            mayas_corner[1].circles[3].set_Y(p4.Y);
+
+
+        }
+        
+        public void set_drag_points_of_mayas_answers(PointF p1, PointF p2, PointF p3, PointF p4)
+        {
+
+
+            mayas_corner[2].circles[0].set_X(p1.X);
+            mayas_corner[2].circles[0].set_Y(p1.Y);
+            mayas_corner[2].circles[1].set_X(p2.X);
+            mayas_corner[2].circles[1].set_Y(p2.Y);
+            mayas_corner[2].circles[2].set_X(p3.X);
+            mayas_corner[2].circles[2].set_Y(p3.Y);
+            mayas_corner[2].circles[3].set_X(p4.X);
+            mayas_corner[2].circles[3].set_Y(p4.Y);
+
+
+        }
+
+        public void Inicialization_BigMaya()
+        {
+            #region Dynamic inicialization of the mayas_corner
+
+            
+            mayas_corner = new List<Circle>();
+
+
+            int count = 0;
+            for (int k = 0; k < numMayas; k++)
+            {
+
+                Circle lstCirculos = new Circle();
+                Circle circulo_0 = new Circle();
+                Circle circulo_1 = new Circle();
+                Circle circulo_2 = new Circle();
+                Circle circulo_3 = new Circle();
+
+                int lineasHorizontales = 0;
+                int lineasVerticales = 0;
+
+                lstCirculos.circles.Add(circulo_0);
+                lstCirculos.circles.Add(circulo_1);
+                lstCirculos.circles.Add(circulo_2);
+                lstCirculos.circles.Add(circulo_3);
+
+                
+                for (int j = 0; j < 2; j++)
+                {
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        int index = j * 2 + i;
+
+                        // Ubications mayas_corner' drag and drop circles in pixels positions  ERG : (i * 93) + 376
+
+                        if (k == 0) // DNI
+                        {
+                            lineasHorizontales = 9;
+                            lineasVerticales = 7;
+                            //lstCirculos.circles[index].set_X((i * 93) + 376);
+                            //lstCirculos.circles[index].set_Y((j * 95) + 121);
+                        }
+                        if (k == 1) // Opcion Albergue
+                        {
+                            lineasHorizontales = 4;
+                            lineasVerticales = 1;
+                            //lstCirculos.circles[index].set_X((i * 14) + 308);
+                            //lstCirculos.circles[index].set_Y((j * 42) + 163); // 8.4
+                        }
+                       
+                        if (k == 2) //respuestas
+                        {
+                           
+                            lineasHorizontales = 34;
+                            lineasVerticales = 26;
+                            //lstCirculos.circles[index].set_X((i * 347) + 111);
+                            //lstCirculos.circles[index].set_Y((j * 356) + 246);
+
+                        }
+                        if (k == 3)
+                        {
+                            //identify the markers per each test and use in 
+                                lineasHorizontales = FILAS;
+                                lineasVerticales = COLUMNAS;
+                                //lstCirculos.circles[index].set_X((i * 372) + 98);//97
+                                //lstCirculos.circles[index].set_Y((j * 502) + 110);//100
+                            //lstCirculos.circles[0].set_X(p1.X);
+                            //lstCirculos.circles[0].set_Y(p1.Y);
+                            //lstCirculos.circles[1].set_X(p2.X);
+                            //lstCirculos.circles[1].set_Y(p2.Y);
+                            //lstCirculos.circles[2].set_X(p3.X);
+                            //lstCirculos.circles[2].set_Y(p3.Y);
+                            //lstCirculos.circles[3].set_X(p4.X);
+                            //lstCirculos.circles[3].set_Y(p4.Y);
+                        }
+
+                       
+                    }
+                }
+                lstCirculos.set_X(lineasVerticales);
+                lstCirculos.set_Y(lineasHorizontales);
+                mayas_corner.Add(lstCirculos);
+
+
+
+                
+
+                if (k >= 5)
+                    count++;
+
+            }
+
+           
+
+            #endregion
+
+        }
+        
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (capWebCam != null)
@@ -915,17 +1100,16 @@ namespace ExamenPsicoligico
         public void ProcessFromFile()
         {
 
-            TOTAL_APPLICANTS = Convert.ToInt32(txtTotalApplicants.Text);
-            TOTAL_SCANNED_PAPERS = Convert.ToInt32(txtTotalScanedPapers.Text);
+            //TOTAL_APPLICANTS = Convert.ToInt32(txtTotalApplicants.Text);
+            //TOTAL_SCANNED_PAPERS = Convert.ToInt32(txtTotalScanedPapers.Text);
             //TOTAL_APPLICANTS = images.Count();
             //TOTAL_SCANNED_PAPERS = images.Count();
 
 
-            if (TOTAL_SCANNED_PAPERS != images.Count())
+            if (images.Count() == 0)
             {
                 BeginProcess = false;
 
-                MessageBox.Show("El número de hojas cargadas no concuerda con el número de hojas escaneadas");
             }
             else //begin images processing
             {
@@ -940,17 +1124,22 @@ namespace ExamenPsicoligico
                     if (!allProcessed)
                     {
                         ProcesScannedImages();
+                        //kevinRemote
+                        flag_init = false;
                         allProcessed = true;
                     }
                     else
                     {
-                        changeImage(PAGE);
+                        //changeImage(PAGE);
                     }
                 }
                 else if (LECTURE_MODE == 1) //read one by one
                 {
                     if (images != null && images.Count > 0)
                         ProcesScannedImagesOneByOne(PAGE);
+
+                    //kevinRemote
+                    flag_init = false;
                 }
                 btnOpenFile.Enabled = true;
             }
@@ -997,7 +1186,9 @@ namespace ExamenPsicoligico
                 // Survey for one person
                 for (int i = k * oneSurveyPages; i < (k + 1) * oneSurveyPages; i++)
                 {
-                    ProcesseFrameToFindCircles(images[i], 0);
+                    ProcesseFramesToFindSquares(images[i]);
+                   
+                    ProcesseFrameToFindCircles(images[i], 0); 
                 }
 
                 // Add the applicant to the list of applicants 
@@ -1006,24 +1197,24 @@ namespace ExamenPsicoligico
                 applicants.Add(applicant);
 
                 // print applicant resutls
-                txtResult.AppendText(Environment.NewLine);
-                txtResult.AppendText("=============  APPLICANT N°  : " + (k + 1).ToString() + "  ==============");
+                //txtResult.AppendText(Environment.NewLine);
+                //txtResult.AppendText("=============  APPLICANT N°  : " + (k + 1).ToString() + "  ==============");
 
                 //each applicants result
                 string[] row = new string[176 + 7];
                 row[0] = txtCode.Text;
-                row[1] = (opcion_01 + 1).ToString();
-                row[2] = (opcion_02 + 1).ToString();
-                row[3] = (codigo_sede+ 1).ToString();
-                row[4] = num_01.ToString();
-                row[5] = num_02.ToString();
-                row[6] = (codigo_semestre + 1).ToString();
-                row[7] = (codigo_turno+ 1).ToString();
+                if (opcion_01 == -1) row[1] = empty; else row[1] = (opcion_01 + 1).ToString();
+                if (opcion_02 == -1) row[2] = empty; else row[2] = (opcion_02 + 1).ToString();
+                if (codigo_sede == -1) row[3] = empty; else row[3] = (codigo_sede + 1).ToString();
+                if (num_01 == -1) row[4] = empty; else row[4] = num_01.ToString();
+                if (num_02 == -1) row[5] = empty; else row[5] = num_02.ToString();
+                if (codigo_turno == -1) row[6] = empty; else row[6] = (codigo_semestre + 1).ToString();
+                if (codigo_turno == -1) row[7] = empty; else row[7] = (codigo_turno + 1).ToString();
 
                 for (int j = 0; j < applicants[0].getExam().Count(); j++)
                 {
-                    txtResult.AppendText(Environment.NewLine);
-                    txtResult.AppendText("Pregunta ID: " + applicants[0].getExam()[j].getIdQuestion().ToString() + " - Answer :  " + applicants[0].getExam()[j].getAnswer());
+                    //txtResult.AppendText(Environment.NewLine);
+                    //txtResult.AppendText("Pregunta ID: " + (1 + j).ToString() + " - Answer :  " + applicants[0].getExam()[j].getAnswer());
 
                     //To gridView
                     row[j + 8] = applicants[0].getExam()[j].getAnswer();
@@ -1031,6 +1222,7 @@ namespace ExamenPsicoligico
                 addColumToGridView(row);
 
                 if (k == TOTAL_APPLICANTS - 1)
+                //if (k == TOTAL_APPLICANTS )
                 {
                     //TODO : Comment to calibrate  
                     //BeginProcess = false;
@@ -1057,7 +1249,12 @@ namespace ExamenPsicoligico
 
             txtResult.Clear();
             applicants.Clear();
-
+            
+            //kevinRemote
+            label4.Text = "Test Numero : " + (pPage + 1).ToString();
+            ProcesseFramesToFindSquares(images[pPage]);
+            pictureBox1.Image = new System.Drawing.Bitmap(imagesNames[pPage]);
+            label3.Text = imagesNames[pPage];
             ProcesseFrameToFindCircles(images[pPage], 0);
 
             // Add the applicant to the list of applicants 
@@ -1066,21 +1263,31 @@ namespace ExamenPsicoligico
             applicants.Add(applicant);
 
             // print applicant resutls
-            txtResult.AppendText(Environment.NewLine);
-            txtResult.AppendText("=============  APPLICANT N°  : " + codeNumber.ToString() + "  ==============");
+            //txtResult.AppendText(Environment.NewLine);
+            //txtResult.AppendText("=============  APPLICANT N°  : " + codeNumber.ToString() + "  ==============");
 
             //each applicants result
-            string[] row = new string[176];
-            row[0] = "134312";
+            string[] row = new string[176 + 7];
+            
+            row[0] = txtCode.Text;
+            if (opcion_01 == -1) row[1] = empty; else row[1] = (opcion_01 + 1).ToString();
+            if (opcion_02 == -1) row[2] = empty; else row[2] = (opcion_02 + 1).ToString();
+            if (codigo_sede == -1) row[3] = empty; else row[3] = (codigo_sede + 1).ToString();
+            if (num_01 == -1) row[4] = empty; else row[4] = num_01.ToString();
+            if (num_02 == -1) row[5] = empty; else row[5] = num_02.ToString();
+            if (codigo_turno == -1) row[6] = empty; else row[6] = (codigo_semestre + 1).ToString();
+            if (codigo_turno == -1) row[7] = empty; else row[7] = (codigo_turno + 1).ToString();
             for (int j = 0; j < applicants[0].getExam().Count(); j++)
             {
-                txtResult.AppendText(Environment.NewLine);
-                txtResult.AppendText("Pregunta ID: " + applicants[0].getExam()[j].getIdQuestion().ToString() + " - Answer :  " + applicants[0].getExam()[j].getAnswer());
+                //txtResult.AppendText(Environment.NewLine);
+                //txtResult.AppendText("Pregunta ID: " + applicants[0].getExam()[j].getIdQuestion().ToString() + " - Answer :  " + applicants[0].getExam()[j].getAnswer());
 
                 //To gridView
-                //row[j+1]=applicants[0].getExam()[j].getAnswer();   
+
+                row[j + 8] = applicants[0].getExam()[j].getAnswer();
+
             }
-            //addColumToGridView(row);
+            addColumToGridView(row);
 
 
             //TODO : Comment to calibrate  
@@ -1088,11 +1295,693 @@ namespace ExamenPsicoligico
 
             //clear resources used for each applicant
             questions.Clear();
-
+            CleanAllList();
             #endregion
         }
 
-        public void ProcesseFrameToFindCircles(Image<Bgr, Byte> pImg, int iterator)
+        public void ProcesseFramesToFindSquares(Image<Bgr, Byte> pImage)
+        {
+
+            pbBad.Visible = false;
+            pbGood.Visible = false;
+            scala_x = (float)(pImage.Width * 1.0 / pictureBox1.Width);
+            scala_y = (float)(pImage.Height * 1.0 / pictureBox1.Height);
+
+            #region square
+            if (pImage != null)
+            {
+
+                Image<Bgr, Byte> pImg = pImage.Copy();
+                Image<Gray, Byte> gray = pImg.Convert<Gray, Byte>().PyrDown().PyrUp();
+                ibHoughCircles.Image = null;
+                ibHoughCircles.Image = gray;
+
+                Gray cannyThreshold = new Gray(180);
+                Gray cannyThresholdLinking = new Gray(120);
+
+                Image<Gray, Byte> cannyEdges = gray.Canny(cannyThreshold, cannyThresholdLinking);
+                ibHoughCircles2.Image = null;
+                ibHoughCircles2.Image = cannyEdges;
+
+                LineSegment2D[] lines = cannyEdges.HoughLinesBinary(1, Math.PI / 45.0, 20, 30, 10)[0];
+
+                List<MCvBox2D> boxList = new List<MCvBox2D>();
+                listSquares = new List<MCvBox2D>();
+                int squares = 0;
+                using (MemStorage storage = new MemStorage())
+                {
+                    for (Contour<Point> contours = cannyEdges.FindContours(); contours != null; contours = contours.HNext)
+                    {
+                        //Contour<Point> currentContour = contours.ApproxPoly(contours.Perimeter * 0.05, storage);
+                        Contour<Point> currentContour = contours.ApproxPoly(contours.Perimeter * 0.05, storage);
+
+                        if (contours.Area > 1000 )// Int32.Parse(txtTotalApplicants.Text))
+                        {
+                            if (currentContour.Total == 4 || currentContour.Total == 2 || currentContour.Total == 6)
+                            {
+                                bool isRectangle = true;
+                                Point[] pts = currentContour.ToArray();
+                                LineSegment2D[] edges = PointCollection.PolyLine(pts, true);
+                                //using edges i found coordinates.
+                                for (int i = 0; i < edges.Length; i++)
+                                {
+                                    double angle = Math.Abs(edges[(i + 1) % edges.Length].GetExteriorAngleDegree(edges[i]));
+                                    if (angle < 85 || angle > 95)
+                                    //if (angle < 80 || angle > 110)
+                                    //if (angle != 90)
+                                    {
+                                        isRectangle = false;
+                                        break;
+                                    }
+                                    if (isRectangle)
+                                    {
+                                        boxList.Add(currentContour.GetMinAreaRect());
+                                        // added
+                                        MCvBox2D box = contours.GetMinAreaRect();
+                                        listSquares.Add(box);
+                                        pImg.Draw(box, new Bgr(System.Drawing.Color.Red), 9);
+                                        squares++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                ibOriginal.Image = pImg;
+                txtTotalApplicants.Text = listSquares.Count.ToString(); //squares.ToString();
+
+
+                bool a, b, c, d;
+                a = b = c = d = false;
+                for (int i = 0; i < listSquares.Count; i++)
+                {
+                    //set the x,y position of the 4 squares guides of the scanned papaer
+                    float xp = listSquares[i].center.X / scala_x;
+                    float yp = listSquares[i].center.Y / scala_y;
+
+                    if (listSquares[i].center.X < pImg.Width / 2 &&
+                        listSquares[i].center.Y < pImg.Height / 2)
+                    {
+                        mayas_corner[3].circles[0].set_X(xp);
+                        mayas_corner[3].circles[0].set_Y(yp);
+                        a = true;
+                    }
+                    if (listSquares[i].center.X > pImg.Width / 2 &&
+                        listSquares[i].center.Y < pImg.Height / 2)
+                    {
+                        mayas_corner[3].circles[1].set_X(xp);
+                        mayas_corner[3].circles[1].set_Y(yp);
+                        b = true;
+                    }
+                    if (listSquares[i].center.X < pImg.Width / 2 &&
+                        listSquares[i].center.Y > pImg.Height / 2)
+                    {
+                        mayas_corner[3].circles[2].set_X(xp);
+                        mayas_corner[3].circles[2].set_Y(yp);
+                        c = true;
+                    }
+                    if (listSquares[i].center.X > pImg.Width / 2 &&
+                        listSquares[i].center.Y > pImg.Height / 2)
+                    {
+                        mayas_corner[3].circles[3].set_X(xp);
+                        mayas_corner[3].circles[3].set_Y(yp);
+                        d = true;
+                    }
+
+                }
+                //cleanList();
+                Image img_gb = null;
+                if (!(a && b && c && d))
+                {
+                    //if was found just 3 points
+                    PointF missingPoint = findOneMissingPointFromSquare(mayas_corner[3], a, b, c, d);
+                    if (missingPoint.X != 0 && missingPoint.Y != 0)
+                    {
+                        if (!a)
+                        {
+                            mayas_corner[3].circles[0].set_X(missingPoint.X);
+                            mayas_corner[3].circles[0].set_Y(missingPoint.Y);
+                        }
+                        else if (!b)
+                        {
+                            mayas_corner[3].circles[1].set_X(missingPoint.X);
+                            mayas_corner[3].circles[1].set_Y(missingPoint.Y);
+                        }
+                        else if (!c)
+                        {
+                            mayas_corner[3].circles[2].set_X(missingPoint.X);
+                            mayas_corner[3].circles[2].set_Y(missingPoint.Y);
+                        }
+                        else
+                        {
+                            mayas_corner[3].circles[3].set_X(missingPoint.X);
+                            mayas_corner[3].circles[3].set_Y(missingPoint.Y);
+                        }
+                        pbGood.Visible = true;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < mayas_corner[3].circles.Count; i++)
+                        {
+                            mayas_corner[3].circles[i].set_X(0);
+                            mayas_corner[3].circles[i].set_Y(0);
+                        }
+                        pbBad.Visible = true;
+                    }
+
+                    //for (int i = 0; i < mayas_corner[3].circles.Count; i++)
+                    //{
+                    //    mayas_corner[3].circles[i].set_X(0);
+                    //    mayas_corner[3].circles[i].set_Y(0);
+                    //}
+                    //pbBad.Visible = true;
+
+                }
+                else { pbGood.Visible = true; }
+
+
+                listSquares.Clear();
+                updateMayasCornerPosition();
+
+                PointF p1 = new PointF(lstAbsBigMaya[894].get_x1(), lstAbsBigMaya[894].get_y1());
+                PointF p2 = new PointF(lstAbsBigMaya[1223].get_x1(), lstAbsBigMaya[1223].get_y1());
+                PointF p3 = new PointF(lstAbsBigMaya[903].get_x1(), lstAbsBigMaya[903].get_y1());
+                PointF p4 = new PointF(lstAbsBigMaya[1232].get_x1(), lstAbsBigMaya[1232].get_y1());
+                set_drag_points_of_mayas_dni(p1, p2, p3, p4);
+
+                p1 = new PointF(lstAbsBigMaya[663].get_x1(), lstAbsBigMaya[663].get_y1());
+                p2 = new PointF(lstAbsBigMaya[710].get_x1(), lstAbsBigMaya[710].get_y1());
+                p3 = new PointF(lstAbsBigMaya[667].get_x1(), lstAbsBigMaya[667].get_y1());
+                p4 = new PointF(lstAbsBigMaya[714].get_x1(), lstAbsBigMaya[714].get_y1());
+                set_drag_points_of_mayas_options(p1, p2, p3, p4);
+
+                p1 = new PointF(lstAbsBigMaya[13].get_x1(), lstAbsBigMaya[13].get_y1());
+                p2 = new PointF(lstAbsBigMaya[1235].get_x1(), lstAbsBigMaya[1235].get_y1());
+                p3 = new PointF(lstAbsBigMaya[47].get_x1(), lstAbsBigMaya[47].get_y1());
+                p4 = new PointF(lstAbsBigMaya[1269].get_x1(), lstAbsBigMaya[1269].get_y1());
+                set_drag_points_of_mayas_answers(p1, p2, p3, p4);
+                //p1 = new PointF(lstAbsBigMaya[12].get_x1(), lstAbsBigMaya[12].get_y1());
+                //p2 = new PointF(lstAbsBigMaya[1234].get_x1(), lstAbsBigMaya[1234].get_y1());
+                //p3 = new PointF(lstAbsBigMaya[47].get_x1(), lstAbsBigMaya[47].get_y1());
+                //p4 = new PointF(lstAbsBigMaya[1269].get_x1(), lstAbsBigMaya[1269].get_y1());
+                //set_drag_points_of_mayas_answers(p1, p2, p3, p4);
+
+                updateMayasCornerPosition();
+            }
+
+            #endregion // put inside an event
+
+        }
+
+        public PointF findOneMissingPointFromSquare(Circle circles, bool a, bool b, bool c, bool d)
+        {
+            int count_corner = 0;
+            if (a) count_corner++;
+            if (b) count_corner++;
+            if (c) count_corner++;
+            if (d) count_corner++;
+            if (count_corner < 3) return new PointF(0,0);
+
+            if (!a) { return new PointF(circles.circles[1].getX() + circles.circles[2].getX() - circles.circles[3].getX() ,
+                                        circles.circles[1].getY() + circles.circles[2].getY() - circles.circles[3].getY());
+            }
+            else if (!b)
+            {
+                return new PointF(circles.circles[3].getX() + circles.circles[0].getX() - circles.circles[2].getX(),
+                                  circles.circles[3].getY() + circles.circles[0].getY() - circles.circles[2].getY());
+            }
+            else if (!c)
+            {
+                return new PointF(circles.circles[3].getX() + circles.circles[0].getX() - circles.circles[1].getX(),
+                                  circles.circles[3].getY() + circles.circles[0].getY() - circles.circles[1].getY());
+            }
+            else
+            {
+                return new PointF(circles.circles[1].getX() + circles.circles[2].getX() - circles.circles[0].getX(),
+                                  circles.circles[1].getY() + circles.circles[2].getY() - circles.circles[0].getY());
+            }
+
+            //PointF pm = new PointF();
+            //if (!a || !d) 
+            //{ 
+            //    pm = getMiddlePoint(circles.circles[1], circles.circles[2]);
+            //    if (!a)
+            //    {
+            //        return new PointF(2 * pm.X - circles.circles[3].getX() , 2 * pm.Y - circles.circles[3].getY());  
+            //    }
+            //    else 
+            //    {
+            //        return new PointF(2 * pm.X - circles.circles[0].getX(), 2 * pm.Y - circles.circles[0].getY());  
+            //    }
+            //}
+            //else// (!b || !d) 
+            //{ 
+            //    pm = getMiddlePoint(circles.circles[0], circles.circles[3]);
+            //    if (!b)
+            //    {
+            //        return new PointF(2 * pm.X - circles.circles[3].getX(), 2 * pm.Y - circles.circles[3].getY());
+            //    }
+            //    else
+            //    {
+            //        return new PointF(2 * pm.X - circles.circles[1].getX(), 2 * pm.Y - circles.circles[1].getY());
+            //    }
+
+            //}
+
+
+         
+        }
+
+        public PointF getMiddlePoint(Circle circle1, Circle circle2)
+        {
+            return new PointF((circle1.getX() + circle2.getX()) / 2.0f , (circle1.getY() + circle2.getY() ) / 2.0f);
+        }
+      
+        public void updateMayasCornerPosition()
+        {
+              #region dibujar mayas_corner
+
+                        float refPoint_X = 0;
+                        float refPoint_Y = 0;
+                        float refPoint_Y_1 = 0;
+
+                        double delta_X_H = 0;
+                        float delta_Y_H = 0;
+                        double delta_X_V = 0;
+                        double delta_Y_V = 0;
+
+                        double dist_X_H = 0;
+                        float dist_Y_H = 0;
+                        double dist_X_V = 0;
+                        double dist_Y_V = 0;
+
+
+
+
+
+                        for (int k = 0; k < mayas_corner.Count; k++)
+                        {
+                            Circle lstCirculos = mayas_corner[k];// 46 + 2 (drag & drop circles) =  48 insted (horizontal lines)
+                            //  28        (vertical lines)
+
+
+                            #region horizontal lines of the dynamic grid - Creation and Drawing
+
+                            int numHorizontalLines = (int)lstCirculos.getY();
+
+                            double distHorizontal1 = lstCirculos.circles[2].y - lstCirculos.circles[0].y;
+                            double intervalHorizonatal1 = distHorizontal1 / numHorizontalLines;
+
+                            double distHorizontal2 = lstCirculos.circles[3].y - lstCirculos.circles[1].y;
+                            double intervalHorizontal2 = distHorizontal2 / numHorizontalLines;
+
+                            double intervalHorizontalX1 = (lstCirculos.circles[2].x - lstCirculos.circles[0].x) * 1.0 / numHorizontalLines;
+                            double intervalHorizontalX2 = (lstCirculos.circles[3].x - lstCirculos.circles[1].x) * 1.0 / numHorizontalLines;
+
+                            for (int i = 0; i <= numHorizontalLines; i++)
+                            {
+
+                                //e.Graphics.DrawLine(
+                                //           new Pen(Color.Red, 1f),
+                                //           new Point((int)((i * intervalHorizontalX1) + lstCirculos.circles[0].x), (int)((i * intervalHorizonatal1) + lstCirculos.circles[0].y)),
+                                //           new Point((int)((i * intervalHorizontalX2) + lstCirculos.circles[1].x), (int)((i * intervalHorizontal2) + lstCirculos.circles[1].y)));
+
+
+
+                            }
+                            #endregion
+
+                            #region Vertical lines of the dynamic grid - Creation and Drawing - Creating lstAbsQuestion and lstAbsOnjects
+
+                            int numVerticalLines = (int)lstCirculos.getX();
+
+                            double distVertical1 = lstCirculos.circles[1].x - lstCirculos.circles[0].x;
+                            double intervalVertical1 = distVertical1 / numVerticalLines;
+
+                            double distVertical2 = lstCirculos.circles[3].x - lstCirculos.circles[2].x;
+                            double intervalVertical2 = distVertical2 / numVerticalLines;
+
+                            double intervalVerticalY1 = (lstCirculos.circles[1].y - lstCirculos.circles[0].y) * 1.0 / numVerticalLines;
+                            double intervalVerticalY2 = (lstCirculos.circles[3].y - lstCirculos.circles[2].y) * 1.0 / numVerticalLines;
+
+                            int index_x = 1;
+                            int aux_count = 0;
+                            int aux_indice_columna = 0;
+                            //pass throug of all the vertical lines 
+                            for (int i = 0; i <= numVerticalLines; i++)
+                            {
+                                #region Vertical lines of the dynamic grid - Drawing
+                                //e.Graphics.DrawLine(
+                                //           new Pen(Color.Red, 1f),
+                                //           new Point((int)((i * intervalVertical1) + lstCirculos.circles[0].x), (int)((i * intervalVerticalY1) + lstCirculos.circles[0].y)),
+                                //           new Point((int)((i * intervalVertical2) + lstCirculos.circles[2].x), (int)((i * intervalVerticalY2) + lstCirculos.circles[2].y)));
+                                #endregion
+                                if (k < 2)
+                                //if(false)
+                                {
+                                    #region Validation Areas of abstract DNI and Options Albergue
+
+                                    dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+                                    dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+                                    delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+                                    delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+                                    int sign = 1;
+                                    if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+                                        //if (lstCirculos.circles[2].x < lstCirculos.circles[0].x ||
+                                        //    lstCirculos.circles[1].x < lstCirculos.circles[3].x)
+                                        sign *= -1;
+
+                                    refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+                                    refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+                                    for (int r = 0; r <= numHorizontalLines; r++)
+                                    {
+
+                                        float x = (refPoint_X + (r * (float)delta_X_V * sign));
+                                        float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+                                        if (k == 0)
+                                        {
+
+                                            #region This is the DNI abstract area
+                                            int pos = (r * 8) + i;
+
+                                            abs_aux_DNI = lstAbsDNI[pos];
+                                            abs_aux_DNI.set_x(x);
+                                            abs_aux_DNI.set_y(y);
+
+                                            lstAbsDNI[pos] = abs_aux_DNI;
+
+                                            my_pen = new Pen(Color.Green, 1f);
+
+                                            #endregion
+                                        }
+                                        if (k == 1)
+                                        {
+                                            #region This is the Option Albergue abstract area
+                                            int pos = (r * 2) + i;
+
+                                            abs_aux_option = lstAbsOptions[pos];
+                                            abs_aux_option.set_x(x);
+                                            abs_aux_option.set_y(y);
+
+                                            lstAbsOptions[pos] = abs_aux_option;
+
+                                            #endregion
+                                        }
+                                    }
+                                    #endregion
+                                }
+                                //else
+                                if (k == 2)
+                                {
+                                    #region Validating areas of abstract questions, Sedes, ciclo y turno
+
+                                    if (i != 2 &&
+                                        i != 3 &&
+                                        i != 4 &&
+                                        i != 7 &&
+                                        i != 8 &&
+                                        i != 9 &&
+                                        i != 12 &&
+                                        i != 13 &&
+                                        i != 14 &&
+                                        i != 17 &&
+                                        i != 18 &&
+                                        i != 19 &&
+                                        i != 22 &&
+                                        i != 23 &&
+                                        i != 24)
+                                    {
+                                        dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+                                        dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+                                        delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+                                        delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+
+                                        int sign = 1;
+                                        if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+                                            sign *= -1;
+
+                                        refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+                                        refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+                                        int index_y = 0;
+
+                                        //pass throug of all the validated horizontal lines
+                                        for (int r = 0; r <= numHorizontalLines; r++)
+                                        {
+                                            float x = (refPoint_X + (r * (float)delta_X_V * sign));
+                                            float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+                                            //All vertical lines that belong to Sede , ciclo y turno
+                                            //avoiding not desiered horizontal lines
+                                            if (r != 5 && r != 26 &&
+                                                r != 6 && r != 27 &&
+                                                r != 7 && r != 28 &&
+                                                r != 18 && r != 29 &&
+                                                r != 19 && r != 30 &&
+                                                r != 20 && r != 31 &&
+                                                r != 22 && r != 32 &&
+                                                r != 23 && r != 33 &&
+                                                r != 24 && r != 34 && (i == 0 || i == 1))
+                                            {
+
+                                                #region logic to save obstrat object to a lstAbsOjects of Sede , ciclo y turno
+
+
+                                                if (r <= 4)
+                                                {
+                                                    #region Sedes Abstrac area
+                                                    if (i == 1)
+                                                    {
+                                                        abs_aux_sede = lstAbsSede[r];
+                                                        abs_aux_sede.set_x(x);
+                                                        abs_aux_sede.set_y(y);
+
+                                                        lstAbsSede[r] = abs_aux_sede;
+
+                                                        my_pen = new Pen(Color.Salmon, 1f);
+
+                                                    }
+                                                    #endregion
+                                                }
+                                                else
+                                                {
+                                                    if (r <= 17)
+                                                    {
+                                                        #region Ciclo abstract area
+
+                                                        int index_pos = (i * 1) + ((r - 8) * 2);
+
+                                                        abs_aux_ciclo = lstAbsCiclo[index_pos];  // 8 - 17 -> fuera
+                                                        abs_aux_ciclo.set_x(x);
+                                                        abs_aux_ciclo.set_y(y);
+
+                                                        lstAbsCiclo[index_pos] = abs_aux_ciclo;
+
+                                                        my_pen = new Pen(Color.Silver, 1f);
+
+                                                        #endregion
+                                                    }
+                                                    else
+                                                    {
+                                                        if (r <= 21)
+                                                        {
+                                                            #region Semestre abstract area
+                                                            int index_pos = (r - 21) + i;
+
+                                                            abs_aux_semestre = lstAbsSemestre[index_pos];
+                                                            abs_aux_semestre.set_x(x);
+                                                            abs_aux_semestre.set_y(y);
+
+                                                            lstAbsSemestre[index_pos] = abs_aux_semestre;
+
+                                                            my_pen = new Pen(Color.Purple, 1f);
+
+                                                            #endregion
+                                                        }
+                                                        else
+                                                        {
+                                                            if (r <= 25)
+                                                            {
+                                                                #region Turno abstract area
+                                                                int index_pos = (r - 25) + i;
+
+
+                                                                abs_aux_turno = lstAbsTurno[index_pos];
+                                                                abs_aux_turno.set_x(x);
+                                                                abs_aux_turno.set_y(y);
+
+                                                                lstAbsTurno[index_pos] = abs_aux_turno;
+
+                                                                my_pen = new Pen(Color.Orange, 1f);
+
+                                                                #endregion
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+
+
+
+                                                #endregion
+                                            }
+                                            else
+                                            {
+                                                //All vertical lines that belong to AbsQuestion
+                                                if (i > 2)
+                                                {
+                                                    #region logic to save ordered obstract question to a lstAbsQuestions
+
+
+                                                    //save abstract position on list
+                                                    if ((index_x % 2) == 1)
+                                                    {
+                                                        //add in the first columna the object to the  list 
+                                                        abs_question.set_x1(x);
+                                                        abs_question.set_y1(y);
+
+                                                        abs_question.set_idQuestion(index_y + (35 * aux_indice_columna));
+                                                        abs_question.set_radio(lstCirculos.getRadio());
+
+                                                        lstAbsQuestions[index_y + (35 * aux_indice_columna)] = abs_question;
+
+                                                    }
+                                                    else
+                                                    {
+                                                        abs_aux_question.set_x1(lstAbsQuestions[index_y + (35 * aux_indice_columna)].get_x1());
+                                                        abs_aux_question.set_y1(lstAbsQuestions[index_y + (35 * aux_indice_columna)].get_y1());
+
+                                                        abs_aux_question.set_idQuestion(lstAbsQuestions[index_y].get_idQuestion());
+                                                        abs_aux_question.set_radio(lstAbsQuestions[index_y].get_radio());
+
+                                                        abs_aux_question.set_x2(x);
+                                                        abs_aux_question.set_y2(y);
+                                                        lstAbsQuestions[index_y + (35 * aux_indice_columna)] = abs_aux_question;
+
+                                                    }
+
+                                                    aux_count++;
+
+                                                    if (r == 34)
+                                                    {
+                                                        //for debug
+                                                        int ri = 0;
+                                                    }
+
+                                                    index_y++;
+
+
+
+                                                    if (aux_count % 70 == 0 && aux_count != 0)
+                                                    {
+                                                        aux_indice_columna++;
+                                                    }
+                                                    if (aux_count >= 350)
+                                                    {// set all vallues to zero 
+
+                                                    }
+                                                    #endregion
+                                                }
+
+                                            }
+
+                                        }
+
+                                        //not delete this count
+                                        index_x++;
+                                        //----------------------
+
+                                    }
+                                    #endregion
+                                }
+
+                                if (k == 3)
+                                {
+                                    #region Validating areas of abstract questions, Sedes, ciclo y turno
+
+                                    if (i != 0 && i != COLUMNAS)
+                                    {
+                                        dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+                                        dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+                                        delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+                                        delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+
+                                        int sign = 1;
+                                        if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+                                            sign *= -1;
+
+                                        refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+                                        refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+                                        int index_y = 0;
+
+                                        //pass throug of all the validated horizontal lines
+                                        for (int r = 0; r <= numHorizontalLines; r++)
+                                        {
+                                            float x = (refPoint_X + (r * (float)delta_X_V * sign));
+                                            float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+                                            //All vertical lines that belong to Sede , ciclo y turno
+                                            //avoiding not desiered horizontal lines
+                                            if (true)
+                                            {
+                                                //All vertical lines that belong to AbsQuestion
+                                                //if (i > 2)
+                                                if (r != 0 && r != FILAS)
+                                                //if(true)
+                                                {
+                                                    #region logic to save ordered obstract question to a lstAbsQuestions
+
+                                                    //my_pen = new Pen(Color.Gray, 1f);
+                                                    //e.Graphics.DrawEllipse(
+                                                    //        my_pen,
+                                                    //        x - lstCirculos.getRadio() / 2,
+                                                    //        y - lstCirculos.getRadio() / 2,
+                                                    //        lstCirculos.getRadio(), lstCirculos.getRadio());
+
+
+
+                                                    abs_big_maya.set_x1(x);
+                                                    abs_big_maya.set_y1(y);
+
+                                                    abs_big_maya.set_idQuestion(index_x);
+                                                    abs_big_maya.set_radio(lstCirculos.getRadio());
+
+
+                                                    lstAbsBigMaya[index_x] = abs_big_maya;
+                                                    index_x++;
+
+
+                                                    #endregion
+                                                }
+
+                                            }
+
+                                        }
+
+                                        float rr = lstAbsBigMaya[13].get_y1();
+                                    }
+                                    #endregion
+                                }
+                            }
+
+                            #endregion
+
+
+                        }
+
+                        #endregion
+        }
+        
+        public void ProcesseFrameToFindCircles(Image<Bgr, Byte> pImage, int iterator)
         {
             #region test_200ppp
 
@@ -1213,86 +2102,79 @@ namespace ExamenPsicoligico
             {
                 #region test_200ppp Better_FOTOS 3 NO inverse  => first iteration     0
 
+
                 case 0:
                     #region Official
-                    if (pImg != null)
+
+
+                    if (pImage != null)
                     {
-                        //InicializeColorConfigurationpPen_200ppp_No_Inverse_First_Iteration();
 
-                        //Images where to draw of what is processed
-                        //imgProcessedHoughCircle = pImg.Copy();
-                        //imgProcessedHoughCircle2 = pImg.Copy();
-                        ////   
-
-                        //Image<Bgr, byte> blur = pImg.SmoothBlur(10, 10, true);
-                        //ibOriginal.Image = blur;
-                        //Image<Bgr, byte> mediansmooth = pImg.SmoothMedian(23);
-                        //imageBox1.Image = mediansmooth;
-
-                        //imageBox1.Image = mediansmooth;
-                        //Image<Bgr, byte> bilat = pImg.SmoothBilatral(1, 255, 34);
-                        //imageBox2.Image = bilat;
-                        //Image<Bgr, byte> gauss = pImg.SmoothGaussian(7, 7, 34.3, 45.3);
-                        //imageBox1.Image = gauss;
-
-                        //ibOriginal.Image = bilat;
+                        Image<Bgr, Byte> pImg = pImage.Copy();
+                        //Image<Bgr, Byte> pImgN = pImage.Copy();
+                        ////ibCanny.Image = pImgN;
+                        
+                        ////History equalization and gamma corretion
+                        //Image<Bgr, Byte> pImgEH = pImage.Copy();
+                        //pImgEH._EqualizeHist();
+                        //ibHoughCircles.Image = pImgEH;
+                        //Image<Bgr, Byte> pImgG = pImgEH.Copy();
+                        //pImgG._GammaCorrect(2.9d);
+                        //ibHoughCircles2.Image = pImgG;
 
                         //ranges
                         imgProcessed = pImg.InRange(new Bgr(B_MIN, G_MIN, R_MIN),
                                                           new Bgr(B_MAX, G_MAX, R_MAX));
-
-                        ibCanny.Image = imgProcessed;
-                    //imgProcessed = pImg.Convert<Gray, byte>();
-
-
-
-
-                        //SmoothGuassian process
-                        //imgProcessed = imgProcessed.SmoothGaussian(1);  // to use with  ThresholdBinaryInv
-                        //imgProcessed = imgProcessed.SmoothGaussian(41);
+                        //Image <Gray, Byte> gi = pImgG.Convert<Gray, Byte>();
+                        //imgProcessed = gi.ThresholdBinary(new Gray(240),new Gray(255));
                         //ibCanny.Image = imgProcessed;
 
+                        
 
+                        //Test using expensive filters...not good results
+                        //Image<Gray, float> imgSobel = imgProcessed.Sobel(1, 0, 23);
+                        //ibHoughCircles.Image = imgSobel;
+                        //imgProcessed = imgProcessed.SmoothGaussian(3);
+                        //ibHoughCircles2.Image = imgProcessed;
 
                         //THRESHOLD_BINARY 
-                    //imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
+                        //imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
                         //imgProcessed = imgProcessed.ThresholdBinaryInv(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
                         #region MemStorage
 
+                        
+
                         contoursPositions.Clear();
+
+
+                        #region Circles
 
                         using (MemStorage stor = new MemStorage())
                         {
                             //Find contours with no holes try CV_RETR_EXTERNAL to find holes
-                            //Contour<System.Drawing.Point> contours = gray_image.FindContours(
-                            // Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE,
-                            // Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_EXTERNAL,
-                            // stor);
-                           
                             contours = imgProcessed.FindContours(
-                              Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE,
-                              Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_CCOMP,
-                              stor);
+                             Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE,
+                             Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_EXTERNAL,
+                             stor);
 
+                            //contours = imgProcessed.FindContours(
+                            //  Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE,
+                            //  Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_CCOMP,
+                            //  stor);
                             //markers.Clear();
-                           
-
                             for (int i = 0; contours != null; contours = contours.HNext)
                             {
                                 i++;
-
-                                //if ((contours.Area > Math.Pow(7, 2)) && (contours.Area < Math.Pow(35, 2)))
-                                if ((contours.Area > Math.Pow(4, 2)) && (contours.Area < Math.Pow(100, 2)))
+                                //if ((contours.Area > Math.Pow(17, 2)) && (contours.Area < Math.Pow(45, 2)))
+                                if ((contours.Area > Math.Pow(7, 2)) && (contours.Area < Math.Pow(45, 2)))
                                 {
-                                    
-
 
                                     MCvBox2D box = contours.GetMinAreaRect();
-                                    CountorsPositions cp = new CountorsPositions (box.center.X,box.center.Y);
+                                    CountorsPositions cp = new CountorsPositions(box.center.X, box.center.Y,(float)contours.Area);
 
                                     contoursPositions.Add(cp);
 
-                                    pImg.Draw(box, new Bgr(System.Drawing.Color.Red), 3);
+                                    //pImg.Draw(box, new Bgr(System.Drawing.Color.Red), 3);
                                     //blobCount++;
 
                                     CvInvoke.cvCircle(pImg,
@@ -1305,7 +2187,7 @@ namespace ExamenPsicoligico
 
                                     PointF p = new PointF((int)box.center.X, (int)box.center.Y);
 
-                                    CircleF c = new CircleF(p, 20);
+                                    CircleF c = new CircleF(p, (float)Math.Sqrt(contours.Area));
                                     pImg.Draw(c,
                                                  new Bgr(System.Drawing.Color.Orange),
                                                  3);
@@ -1314,8 +2196,10 @@ namespace ExamenPsicoligico
                                 }
                             }
                         }
-
+                        #endregion
+//cleanList();
                         FillingAnswersToAbstractObject();
+                        
 
                         FillingAnswerstToFinalQuestionsList();
 
@@ -1327,6 +2211,9 @@ namespace ExamenPsicoligico
                         ////txtBlobCount.Text = blobCount.ToString();
 
                         #endregion
+
+                        
+
 
                         //ibHoughCircles.Image = imgProcessed;
 
@@ -1392,12 +2279,14 @@ namespace ExamenPsicoligico
 
                         }
 
-                        //ibOriginal.Image = pImg;
+                       //ibOriginal.Image = pImg;
                         //ibCanny.Image = imgProcessedCanny;
 
                     }
+
                     break;
                     #endregion
+
 
                 #region test_200ppp_Edit
 
@@ -1515,247 +2404,248 @@ namespace ExamenPsicoligico
 
                 #endregion
 
-                #region second iteration   1
-                case 1:
-                    if (pImg != null)
-                    {
-                        InicializeColorConfigurationpPen_200ppp_No_Inverse_Second_Iteration();
+                //#region second iteration   1
+                //case 1:
+                //    if (pImg != null)
+                //    {
+                //        InicializeColorConfigurationpPen_200ppp_No_Inverse_Second_Iteration();
 
-                        //Images where to draw of what is processed
-                        imgProcessedHoughCircle = pImg.Copy();
-                        imgProcessedHoughCircle2 = pImg.Copy();
 
+                //        //Images where to draw of what is processed
+                //        imgProcessedHoughCircle = pImg.Copy();
+                //        imgProcessedHoughCircle2 = pImg.Copy();
 
-                        ////   
 
-                        //Image<Bgr, byte> blur = pImg.SmoothBlur(10, 10, true);
-                        //ibOriginal.Image = blur;
-                        //Image<Bgr, byte> mediansmooth = pImg.SmoothMedian(13);
-                        //imageBox1.Image = mediansmooth;
+                //        ////   
 
-                        //imageBox1.Image = mediansmooth;
-                        //Image<Bgr, byte> bilat = pImg.SmoothBilatral(5, 255, 34);
-                        //imageBox2.Image = bilat;
-                        //Image<Bgr, byte> gauss = pImg.SmoothGaussian(7, 7, 34.3, 45.3);
-                        //imageBox1.Image = gauss;
+                //        //Image<Bgr, byte> blur = pImg.SmoothBlur(10, 10, true);
+                //        //ibOriginal.Image = blur;
+                //        //Image<Bgr, byte> mediansmooth = pImg.SmoothMedian(13);
+                //        //imageBox1.Image = mediansmooth;
 
-                        ///
+                //        //imageBox1.Image = mediansmooth;
+                //        //Image<Bgr, byte> bilat = pImg.SmoothBilatral(5, 255, 34);
+                //        //imageBox2.Image = bilat;
+                //        //Image<Bgr, byte> gauss = pImg.SmoothGaussian(7, 7, 34.3, 45.3);
+                //        //imageBox1.Image = gauss;
 
+                //        ///
 
-                        //ranges
-                        imgProcessed = pImg.InRange(new Bgr(B_MIN, G_MIN, R_MIN),
-                                                          new Bgr(B_MAX, G_MAX, R_MAX));
 
+                //        //ranges
+                //        imgProcessed = pImg.InRange(new Bgr(B_MIN, G_MIN, R_MIN),
+                //                                          new Bgr(B_MAX, G_MAX, R_MAX));
 
-                        ibOriginal.Image = imgProcessed;
 
+                //        //ibOriginal.Image = imgProcessed;
 
 
-                        //SmoothGuassian process
-                        imgProcessed = imgProcessed.SmoothGaussian(31);
-                        ibCanny.Image = imgProcessed;
 
+                //        //SmoothGuassian process
+                //        imgProcessed = imgProcessed.SmoothGaussian(31);
+                //        ibCanny.Image = imgProcessed;
 
 
-                        //THRESHOLD_BINARY 
-                        imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
 
+                //        //THRESHOLD_BINARY 
+                //        imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
 
-                        ibHoughCircles.Image = imgProcessed;
 
+                //        ibHoughCircles.Image = imgProcessed;
 
 
-                        //Image<Gray,float> imgSobel = imgProcessed.Sobel(1, 0,3);
 
-                        //ibHoughCircles2.Image = imgSobel;
-                        imgProcessed = imgProcessed.SmoothGaussian(9);
-                        //ibHoughCircles.Image = imgProcessed;
+                //        //Image<Gray,float> imgSobel = imgProcessed.Sobel(1, 0,3);
 
+                //        //ibHoughCircles2.Image = imgSobel;
+                //        imgProcessed = imgProcessed.SmoothGaussian(9);
+                //        //ibHoughCircles.Image = imgProcessed;
 
-                        // canny process
-                        //imgProcessedCanny = imgProcessed.Canny(new Gray(THRESH), new Gray(THRESH_LINKING));
-                        ibHoughCircles2.Image = imgProcessed;
 
-                        // finding all circles from image
-                        CircleF[] circles = imgProcessedCanny.HoughCircles(new Gray(CANNY_THRESHOLD),
-                                                                           new Gray(ACUMMULATOR_THRESHOLD),
-                                                                           2,
-                            //imgProcessed.Height / 4,
-                                                                           MIN_DIST,
-                            // de 1 a 4 varia en la cantidad de pixeles a procesar, calidad de la imagen
-                                                                           MIN_RADIO,
-                                                                           MAX_RADIO)[0];
+                //        // canny process
+                //        //imgProcessedCanny = imgProcessed.Canny(new Gray(THRESH), new Gray(THRESH_LINKING));
+                //        ibHoughCircles2.Image = imgProcessed;
 
-                        //circles = null;
+                //        // finding all circles from image
+                //        CircleF[] circles = imgProcessedCanny.HoughCircles(new Gray(CANNY_THRESHOLD),
+                //                                                           new Gray(ACUMMULATOR_THRESHOLD),
+                //                                                           2,
+                //            //imgProcessed.Height / 4,
+                //                                                           MIN_DIST,
+                //            // de 1 a 4 varia en la cantidad de pixeles a procesar, calidad de la imagen
+                //                                                           MIN_RADIO,
+                //                                                           MAX_RADIO)[0];
 
-                        if (circles != null)
-                        {
-                            txtTotalCircles.Text = circles.Length.ToString();
+                //        //circles = null;
 
-                            for (int i = 0; i < circles.Length; i++)
-                            {
-                                CvInvoke.cvCircle(imgProcessedHoughCircle,
-                                                  new Point((int)circles[i].Center.X, (int)circles[i].Center.Y),
-                                                  2,
-                                                  new MCvScalar(0, 255, 0),
-                                                  -1,
-                                                  LINE_TYPE.CV_AA,
-                                                  0);
-                            }
+                //        if (circles != null)
+                //        {
+                //            txtTotalCircles.Text = circles.Length.ToString();
 
-                            for (int i = 0; i < circles.Length; i++)
-                            {
+                //            for (int i = 0; i < circles.Length; i++)
+                //            {
+                //                CvInvoke.cvCircle(imgProcessedHoughCircle,
+                //                                  new Point((int)circles[i].Center.X, (int)circles[i].Center.Y),
+                //                                  2,
+                //                                  new MCvScalar(0, 255, 0),
+                //                                  -1,
+                //                                  LINE_TYPE.CV_AA,
+                //                                  0);
+                //            }
 
-                                imgProcessedHoughCircle.Draw(circles[i],
-                                               new Bgr(Color.Red),
-                                               2);
-                                // mostrmo lo Id desordemandos del arreglo de circles                 
-                                MCvFont f = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.9, 0.9);
-                                imgProcessedHoughCircle.Draw(i.ToString(), ref f, new Point((int)circles[i].Center.X + 10, (int)circles[i].Center.Y + 6), new Bgr(255, 0, 0));
-                            }
+                //            for (int i = 0; i < circles.Length; i++)
+                //            {
 
-                            // call method to make second iteration
-                            ProcesseFrameToFindAnswers(imgProcessedHoughCircle2, circles.ToList(), 1);
+                //                imgProcessedHoughCircle.Draw(circles[i],
+                //                               new Bgr(Color.Red),
+                //                               2);
+                //                // mostrmo lo Id desordemandos del arreglo de circles                 
+                //                MCvFont f = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.9, 0.9);
+                //                imgProcessedHoughCircle.Draw(i.ToString(), ref f, new Point((int)circles[i].Center.X + 10, (int)circles[i].Center.Y + 6), new Bgr(255, 0, 0));
+                //            }
 
+                //            // call method to make second iteration
+                //            ProcesseFrameToFindAnswers(imgProcessedHoughCircle2, circles.ToList(), 1);
 
-                            //ibHoughCircles.Image = imgProcessedHoughCircle;
-                            //ibHoughCircles2.Image = imgProcessedHoughCircle2;
-                            //ibHoughCircles2.Image = imgProcessedHoughCircle;
-                            imageBox1.Image = imgProcessedHoughCircle2;
 
+                //            //ibHoughCircles.Image = imgProcessedHoughCircle;
+                //            //ibHoughCircles2.Image = imgProcessedHoughCircle2;
+                //            //ibHoughCircles2.Image = imgProcessedHoughCircle;
+                //            imageBox1.Image = imgProcessedHoughCircle2;
 
 
-                        }
 
-                        //ibOriginal.Image = pImg;
-                        //ibCanny.Image = imgProcessedCanny;
+                //        }
 
-                    }
+                //        //ibOriginal.Image = pImg;
+                //        //ibCanny.Image = imgProcessedCanny;
 
-                    break;
+                //    }
 
-                #endregion
+                //    break;
 
-                #region  third iteration    2
-                case 2:
-                    if (pImg != null)
-                    {
-                        InicializeColorConfigurationpPen_200ppp_No_Inverse_Third_Iteration();
+                //#endregion
 
-                        //Images where to draw of what is processed
-                        imgProcessedHoughCircle = pImg.Copy();
-                        imgProcessedHoughCircle2 = pImg.Copy();
+                //#region  third iteration    2
+                //case 2:
+                //    if (pImg != null)
+                //    {
+                //        InicializeColorConfigurationpPen_200ppp_No_Inverse_Third_Iteration();
 
+                //        //Images where to draw of what is processed
+                //        imgProcessedHoughCircle = pImg.Copy();
+                //        imgProcessedHoughCircle2 = pImg.Copy();
 
-                        ////   
 
-                        //Image<Bgr, byte> blur = pImg.SmoothBlur(10, 10, true);
-                        //ibOriginal.Image = blur;
-                        //Image<Bgr, byte> mediansmooth = pImg.SmoothMedian(13);
-                        //imageBox1.Image = mediansmooth;
+                //        ////   
 
-                        //imageBox1.Image = mediansmooth;
-                        //Image<Bgr, byte> bilat = pImg.SmoothBilatral(5, 255, 34);
-                        //imageBox2.Image = bilat;
-                        //Image<Bgr, byte> gauss = pImg.SmoothGaussian(7, 7, 34.3, 45.3);
-                        //imageBox1.Image = gauss;
+                //        //Image<Bgr, byte> blur = pImg.SmoothBlur(10, 10, true);
+                //        //ibOriginal.Image = blur;
+                //        //Image<Bgr, byte> mediansmooth = pImg.SmoothMedian(13);
+                //        //imageBox1.Image = mediansmooth;
 
-                        ///
+                //        //imageBox1.Image = mediansmooth;
+                //        //Image<Bgr, byte> bilat = pImg.SmoothBilatral(5, 255, 34);
+                //        //imageBox2.Image = bilat;
+                //        //Image<Bgr, byte> gauss = pImg.SmoothGaussian(7, 7, 34.3, 45.3);
+                //        //imageBox1.Image = gauss;
 
+                //        ///
 
-                        //ranges
-                        imgProcessed = pImg.InRange(new Bgr(B_MIN, G_MIN, R_MIN),
-                                                          new Bgr(B_MAX, G_MAX, R_MAX));
 
+                //        //ranges
+                //        imgProcessed = pImg.InRange(new Bgr(B_MIN, G_MIN, R_MIN),
+                //                                          new Bgr(B_MAX, G_MAX, R_MAX));
 
-                        ibOriginal.Image = imgProcessed;
 
+                //        ibOriginal.Image = imgProcessed;
 
 
-                        //SmoothGuassian process
-                        imgProcessed = imgProcessed.SmoothGaussian(23);
-                        ibCanny.Image = imgProcessed;
 
+                //        //SmoothGuassian process
+                //        imgProcessed = imgProcessed.SmoothGaussian(23);
+                //        ibCanny.Image = imgProcessed;
 
 
-                        //THRESHOLD_BINARY 
-                        imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
 
+                //        //THRESHOLD_BINARY 
+                //        imgProcessed = imgProcessed.ThresholdBinary(new Gray(THRESHOLD_BINARY_MIN), new Gray(THRESHOLD_BINARY_MAX)); //ThresholdBinary
 
-                        ibHoughCircles.Image = imgProcessed;
 
+                //        ibHoughCircles.Image = imgProcessed;
 
 
-                        //Image<Gray,float> imgSobel = imgProcessed.Sobel(1, 0,3);
 
-                        //ibHoughCircles2.Image = imgSobel;
-                        //imgProcessed = imgProcessed.SmoothGaussian(9);
-                        //ibHoughCircles.Image = imgProcessed;
+                //        //Image<Gray,float> imgSobel = imgProcessed.Sobel(1, 0,3);
 
+                //        //ibHoughCircles2.Image = imgSobel;
+                //        //imgProcessed = imgProcessed.SmoothGaussian(9);
+                //        //ibHoughCircles.Image = imgProcessed;
 
-                        // canny process
-                        imgProcessedCanny = imgProcessed.Canny(new Gray(THRESH), new Gray(THRESH_LINKING));
-                        ibHoughCircles2.Image = imgProcessedCanny;
 
-                        // finding all circles from image
-                        CircleF[] circles = imgProcessedCanny.HoughCircles(new Gray(CANNY_THRESHOLD),
-                                                                           new Gray(ACUMMULATOR_THRESHOLD),
-                                                                           2,
-                            //imgProcessed.Height / 4,
-                                                                           MIN_DIST,
-                            // de 1 a 4 varia en la cantidad de pixeles a procesar, calidad de la imagen
-                                                                           MIN_RADIO,
-                                                                           MAX_RADIO)[0];
+                //        // canny process
+                //        imgProcessedCanny = imgProcessed.Canny(new Gray(THRESH), new Gray(THRESH_LINKING));
+                //        ibHoughCircles2.Image = imgProcessedCanny;
 
-                        //circles = null;
+                //        // finding all circles from image
+                //        CircleF[] circles = imgProcessedCanny.HoughCircles(new Gray(CANNY_THRESHOLD),
+                //                                                           new Gray(ACUMMULATOR_THRESHOLD),
+                //                                                           2,
+                //            //imgProcessed.Height / 4,
+                //                                                           MIN_DIST,
+                //            // de 1 a 4 varia en la cantidad de pixeles a procesar, calidad de la imagen
+                //                                                           MIN_RADIO,
+                //                                                           MAX_RADIO)[0];
 
-                        if (circles != null)
-                        {
-                            txtTotalCircles.Text = circles.Length.ToString();
+                //        //circles = null;
 
-                            for (int i = 0; i < circles.Length; i++)
-                            {
-                                CvInvoke.cvCircle(imgProcessedHoughCircle,
-                                                  new Point((int)circles[i].Center.X, (int)circles[i].Center.Y),
-                                                  2,
-                                                  new MCvScalar(0, 255, 0),
-                                                  -1,
-                                                  LINE_TYPE.CV_AA,
-                                                  0);
-                            }
+                //        if (circles != null)
+                //        {
+                //            txtTotalCircles.Text = circles.Length.ToString();
 
-                            for (int i = 0; i < circles.Length; i++)
-                            {
+                //            for (int i = 0; i < circles.Length; i++)
+                //            {
+                //                CvInvoke.cvCircle(imgProcessedHoughCircle,
+                //                                  new Point((int)circles[i].Center.X, (int)circles[i].Center.Y),
+                //                                  2,
+                //                                  new MCvScalar(0, 255, 0),
+                //                                  -1,
+                //                                  LINE_TYPE.CV_AA,
+                //                                  0);
+                //            }
 
-                                imgProcessedHoughCircle.Draw(circles[i],
-                                               new Bgr(Color.Red),
-                                               2);
-                                // mostrmo lo Id desordemandos del arreglo de circles                 
-                                MCvFont f = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.9, 0.9);
-                                imgProcessedHoughCircle.Draw(i.ToString(), ref f, new Point((int)circles[i].Center.X + 10, (int)circles[i].Center.Y + 6), new Bgr(255, 0, 0));
-                            }
+                //            for (int i = 0; i < circles.Length; i++)
+                //            {
 
-                            // call method to make second iteration
-                            ProcesseFrameToFindAnswers(imgProcessedHoughCircle2, circles.ToList(), 2);
+                //                imgProcessedHoughCircle.Draw(circles[i],
+                //                               new Bgr(Color.Red),
+                //                               2);
+                //                // mostrmo lo Id desordemandos del arreglo de circles                 
+                //                MCvFont f = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.9, 0.9);
+                //                imgProcessedHoughCircle.Draw(i.ToString(), ref f, new Point((int)circles[i].Center.X + 10, (int)circles[i].Center.Y + 6), new Bgr(255, 0, 0));
+                //            }
 
+                //            // call method to make second iteration
+                //            ProcesseFrameToFindAnswers(imgProcessedHoughCircle2, circles.ToList(), 2);
 
-                            //ibHoughCircles.Image = imgProcessedHoughCircle;
-                            //ibHoughCircles2.Image = imgProcessedHoughCircle2;
-                            //ibHoughCircles2.Image = imgProcessedHoughCircle;
-                            imageBox1.Image = imgProcessedHoughCircle2;
 
+                //            //ibHoughCircles.Image = imgProcessedHoughCircle;
+                //            //ibHoughCircles2.Image = imgProcessedHoughCircle2;
+                //            //ibHoughCircles2.Image = imgProcessedHoughCircle;
+                //            imageBox1.Image = imgProcessedHoughCircle2;
 
 
-                        }
 
-                        //ibOriginal.Image = pImg;
-                        //ibCanny.Image = imgProcessedCanny;
+                //        }
 
-                    }
+                //        //ibOriginal.Image = pImg;
+                //        //ibCanny.Image = imgProcessedCanny;
 
-                    break;
+                //    }
 
-                #endregion
+                //    break;
+
+                //#endregion
 
             }
 
@@ -1904,7 +2794,6 @@ namespace ExamenPsicoligico
             //                                                       MAX_RADIO)[0];
 
             //    //COMENTAR PARA HACER PRUEBAS DE CALIBRACION 
-            //    //TODO : Comment to calibrate 
             //    //circles = null;
 
             //    if (circles != null)
@@ -1974,8 +2863,6 @@ namespace ExamenPsicoligico
 
             //        showID(lsAnswerAndCodeNumbersOrdered);
 
-            //        //TODO : Comment to calibrate 
-            //        //TODO : to edit for new answers
             //        //processAnswers(lsAnswerAndCodeNumbersOrdered, answerReferenceLines, codeNumberReferenceLines, pImg);
             //        processAnswersComplete(lsAnswersComplete, answerReferenceLines, pImg);
             //    }
@@ -2012,7 +2899,7 @@ namespace ExamenPsicoligico
                         //processAnswers(lsAnswersCompletedWithNonMarkerdAnswers, answerReferenceLines, codeNumberReferenceLines, pImg);
 
                         // call method to make second iteration
-                        ProcesseFrameToFindCircles(pImg, 1);
+                        //ProcesseFrameToFindCircles(pImg, 1);
                     }
                     break;
 
@@ -2034,8 +2921,6 @@ namespace ExamenPsicoligico
 
                         //showID(lsAnswerAndCodeNumbersOrdered);
 
-                        //TODO : Comment to calibrate 
-                        //TODO : to edit for new answers
                         //processAnswers(lsAnswerAndCodeNumbersOrdered, answerReferenceLines, codeNumberReferenceLines, pImg);
                         //processAnswersBlackCircleSelected(lsAnswersComplete, answerReferenceLines, pImg);
 
@@ -2067,7 +2952,6 @@ namespace ExamenPsicoligico
 
                     //showID(lsAnswerAndCodeNumbersOrdered);
 
-                    //TODO : Comment to calibrate 
                     //processAnswersBlackCircleSelected(lsAnswersComplete, answerReferenceLines, pImg);
 
 
@@ -2840,13 +3724,16 @@ namespace ExamenPsicoligico
             }
             else
             {   //drawing -> for manual calibrating
-                pictureBox1.Invalidate();
+
             }
+            pictureBox1.Invalidate();
+
         }
 
         private void btnOpenFile_Click(object sender, EventArgs e)
         {
-
+           
+           
             if (images.Count() > 0)
             {
                 images.Clear();
@@ -2854,11 +3741,22 @@ namespace ExamenPsicoligico
 
             if (open.ShowDialog() == DialogResult.OK)
             {
+                TOTAL_SCANNED_PAPERS = open.FileNames.Count(); 
+                TOTAL_APPLICANTS = open.FileNames.Count();
+                 
+                pictureBox2.Width = 85;
+                pictureBox2.Height = 68;
+                label11.Visible = false;
+                label14.Visible = false;
+                label15.Visible = false;
+                if (imagesNames != null) imagesNames.Clear();
+
                 foreach (String file in open.FileNames)
                 {
                     try
                     {
                         images.Add(imgInputFrame = new Image<Bgr, byte>(file));
+                        imagesNames.Add(file);
                         pictureBox1.Image = new System.Drawing.Bitmap(file);
 
                     }
@@ -3067,8 +3965,7 @@ namespace ExamenPsicoligico
         private void rbVideo_CheckedChanged(object sender, EventArgs e)
         {
             OPTION = 2;
-            ibOriginal.Image = null;
-            ibHoughCircles.Image = null;
+            
             btnOpenFile.Enabled = false;
             btnPause.Enabled = true;
             Pause = false;
@@ -3094,6 +3991,9 @@ namespace ExamenPsicoligico
         {
             if (PAGE < images.Count - 1)
             {
+                //kevinRemote
+                flag_init = true;
+
                 ID_SEQUENCE = 0;
                 PAGE++;
                 btnPreview.Enabled = true;
@@ -3109,6 +4009,9 @@ namespace ExamenPsicoligico
         {
             if (PAGE > 0)
             {
+                //kevinRemote
+                flag_init = true;
+
                 ID_SEQUENCE = 0;
                 PAGE--;
                 btnNext.Enabled = true;
@@ -3128,26 +4031,19 @@ namespace ExamenPsicoligico
         private void rbAnalizeAll_CheckedChanged(object sender, EventArgs e)
         {
             refreshOptions();
-            if (LECTURE_MODE == 1)
-            {
-                BeginProcess = true;
-                allProcessed = false;
-            }
+           
+            btnPreview.Visible = false;
+            btnNext.Visible = false;
+            label4.Visible = false;
             LECTURE_MODE = 0;
-
-
         }
-
 
         private void rbAnalizeOneByOne_CheckedChanged(object sender, EventArgs e)
         {
             refreshOptions();
-            if (LECTURE_MODE == 0)
-            {
-                BeginProcess = true;
-            }
+         
             LECTURE_MODE = 1;
-
+            
             flag_init = false;
         }
 
@@ -3163,8 +4059,37 @@ namespace ExamenPsicoligico
             if (LECTURE_MODE == 0)
             {
                 BeginProcess = true;
+                allProcessed = false;
             }
+            dataGridView1.Rows.Clear();
         }
+
+        private void btnInit_Click(object sender, EventArgs e)
+        {
+            if (images == null || images.Count == 0)
+            {
+                MessageBox.Show("Aún no se ha cargado ningún test para corregido. Por favor seleccione almenos uno en el Paso 01 : Cargar Test.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+            }
+
+            refreshOptions();
+            if (LECTURE_MODE == 1)
+            {
+
+                btnPreview.Visible = true;
+                btnNext.Visible = true;
+                label4.Visible = true;
+
+                PAGE = 0;
+                btnNext.Enabled = true;
+                btnPreview.Enabled= false;
+
+            }
+            flag_init = true;
+            BeginProcess = true;
+            //allProcessed = true;
+        }
+
 
         #region ColorPicker to Track
 
@@ -3198,15 +4123,424 @@ namespace ExamenPsicoligico
 
         #endregion
 
+
         #endregion
 
-
+         
         #region  Draw Mayas
+
+        //ORIGINAL private void pictureBox1_Paint(object sender, PaintEventArgs e)
+
+        //private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        //{
+            
+        //    #region dibujar mayas_corner
+
+        //    float refPoint_X = 0;
+        //    float refPoint_Y = 0;
+        //    float refPoint_Y_1 = 0;
+
+        //    double delta_X_H = 0;
+        //    float delta_Y_H = 0;
+        //    double delta_X_V = 0;
+        //    double delta_Y_V = 0;
+
+        //    double dist_X_H = 0;
+        //    float dist_Y_H = 0;
+        //    double dist_X_V = 0;
+        //    double dist_Y_V = 0;
+
+        //    for (   int k = 0; k < mayas_corner.Count; k++)
+        //    {
+        //        Circle lstCirculos = mayas_corner[k];
+
+
+        //        #region horizontal lines of the dynamic grid - Creation and Drawing
+
+        //        int numHorizontalLines = lstCirculos.getY();
+
+        //        double distHorizontal1 = lstCirculos.circles[2].y - lstCirculos.circles[0].y;
+        //        double intervalHorizonatal1 = distHorizontal1 / numHorizontalLines;
+
+        //        double distHorizontal2 = lstCirculos.circles[3].y - lstCirculos.circles[1].y;
+        //        double intervalHorizontal2 = distHorizontal2 / numHorizontalLines;
+
+        //        double intervalHorizontalX1 = (lstCirculos.circles[2].x - lstCirculos.circles[0].x) * 1.0 / numHorizontalLines;
+        //        double intervalHorizontalX2 = (lstCirculos.circles[3].x - lstCirculos.circles[1].x) * 1.0 / numHorizontalLines;
+
+        //        for (int i = 0; i <= numHorizontalLines; i++)
+        //        {
+
+        //            //e.Graphics.DrawLine(
+        //            //           new Pen(Color.Red, 1f),
+        //            //           new Point((int)((i * intervalHorizontalX1) + lstCirculos.circles[0].x), (int)((i * intervalHorizonatal1) + lstCirculos.circles[0].y)),
+        //            //           new Point((int)((i * intervalHorizontalX2) + lstCirculos.circles[1].x), (int)((i * intervalHorizontal2) + lstCirculos.circles[1].y)));
+
+
+
+        //        }
+        //        #endregion
+
+        //        #region Vertical lines of the dynamic grid - Creation and Drawing - Creating lstAbsQuestion and lstAbsOnjects
+
+        //        int numVerticalLines = lstCirculos.getX();
+
+        //        double distVertical1 = lstCirculos.circles[1].x - lstCirculos.circles[0].x;
+        //        double intervalVertical1 = distVertical1 / numVerticalLines;
+
+        //        double distVertical2 = lstCirculos.circles[3].x - lstCirculos.circles[2].x;
+        //        double intervalVertical2 = distVertical2 / numVerticalLines;
+
+        //        double intervalVerticalY1 = (lstCirculos.circles[1].y - lstCirculos.circles[0].y) * 1.0 / numVerticalLines;
+        //        double intervalVerticalY2 = (lstCirculos.circles[3].y - lstCirculos.circles[2].y) * 1.0 / numVerticalLines;
+
+        //        int index_x = 1;
+        //        int aux_count = 0;
+        //        int aux_indice_columna = 0;
+        //        //pass throug of all the vertical lines 
+        //        for (int i = 0; i <= numVerticalLines; i++)
+        //        {
+        //            #region Vertical lines of the dynamic grid - Drawing
+        //            //e.Graphics.DrawLine(
+        //            //           new Pen(Color.Red, 1f),
+        //            //           new Point((int)((i * intervalVertical1) + lstCirculos.circles[0].x), (int)((i * intervalVerticalY1) + lstCirculos.circles[0].y)),
+        //            //           new Point((int)((i * intervalVertical2) + lstCirculos.circles[2].x), (int)((i * intervalVerticalY2) + lstCirculos.circles[2].y)));
+        //            #endregion
+
+        //            if (k < 2)
+        //            {
+        //                #region Validation Areas of abstract DNI and Options Albergue
+
+        //                dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+        //                dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+        //                delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+        //                delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+        //                int sign = 1;
+        //                //if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+        //                if (lstCirculos.circles[2].x < lstCirculos.circles[0].x ||
+        //                    lstCirculos.circles[1].x < lstCirculos.circles[3].x)
+        //                    sign *= -1;
+
+        //                refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+        //                refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+        //                for (int r = 0; r <= numHorizontalLines; r++)
+        //                {
+
+        //                    float x = (refPoint_X + (r * (float)delta_X_V * sign));
+        //                    float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+        //                    if (k == 0)
+        //                    {
+
+        //                        #region This is the DNI abstract area
+        //                        int pos = (r * 8) + i;
+
+        //                        abs_aux_DNI = lstAbsDNI[pos];
+        //                        abs_aux_DNI.set_x(x);
+        //                        abs_aux_DNI.set_y(y);
+
+        //                        lstAbsDNI[pos] = abs_aux_DNI;
+
+        //                        my_pen = new Pen(Color.Green, 1f);
+
+        //                        #endregion
+        //                    }
+        //                    if (k == 1)
+        //                    {
+        //                        #region This is the Option Albergue abstract area
+        //                        int pos = (r * 2) + i;
+
+        //                        abs_aux_option = lstAbsOptions[pos];
+        //                        abs_aux_option.set_x(x);
+        //                        abs_aux_option.set_y(y);
+
+        //                        lstAbsOptions[pos] = abs_aux_option;
+
+
+        //                        my_pen = new Pen(Color.PaleVioletRed, 1f);
+
+        //                        #endregion
+        //                    }
+        //                    e.Graphics.DrawEllipse(
+        //                            my_pen,
+        //                            x - lstCirculos.getRadio() / 2,
+        //                            y - lstCirculos.getRadio() / 2,
+        //                            lstCirculos.getRadio(), lstCirculos.getRadio());
+        //                }
+        //                #endregion
+        //            }
+        //            else
+        //            {
+        //                #region Validating areas of abstract questions, Sedes, ciclo y turno
+
+        //                if (i != 2 &&
+        //                    i != 3 &&
+        //                    i != 4 &&
+        //                    i != 7 &&
+        //                    i != 8 &&
+        //                    i != 9 &&
+        //                    i != 12 &&
+        //                    i != 13 &&
+        //                    i != 14 &&
+        //                    i != 17 &&
+        //                    i != 18 &&
+        //                    i != 19 &&
+        //                    i != 22 &&
+        //                    i != 23 &&
+        //                    i != 24)
+        //                {
+        //                    dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+        //                    dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+        //                    delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+        //                    delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+
+        //                    int sign = 1;
+        //                    if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+        //                        sign *= -1;
+
+        //                    refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+        //                    refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+        //                    int index_y = 0;
+
+        //                    //pass throug of all the validated horizontal lines
+        //                    for (int r = 0; r <= numHorizontalLines; r++)
+        //                    {
+        //                        float x = (refPoint_X + (r * (float)delta_X_V * sign));
+        //                        float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+        //                        //All vertical lines that belong to Sede , ciclo y turno
+        //                        //avoiding not desiered horizontal lines
+        //                        if (r != 5 && r != 26 &&
+        //                            r != 6 && r != 27 &&
+        //                            r != 7 && r != 28 &&
+        //                            r != 18 && r != 29 &&
+        //                            r != 19 && r != 30 &&
+        //                            r != 20 && r != 31 &&
+        //                            r != 22 && r != 32 &&
+        //                            r != 23 && r != 33 &&
+        //                            r != 24 && r != 34 && (i == 0 || i == 1))
+        //                        {
+
+        //                            #region logic to save obstrat object to a lstAbsOjects of Sede , ciclo y turno
+
+
+        //                            if (r <= 4)
+        //                            {
+        //                                #region Sedes Abstrac area
+        //                                if (i == 1)
+        //                                {
+        //                                    abs_aux_sede = lstSede[r];
+        //                                    abs_aux_sede.set_x(x);
+        //                                    abs_aux_sede.set_y(y);
+
+        //                                    lstSede[r] = abs_aux_sede;
+
+        //                                    my_pen = new Pen(Color.Salmon, 1f);
+
+        //                                }
+        //                                #endregion
+        //                            }
+        //                            else
+        //                            {
+        //                                if (r <= 17)
+        //                                {
+        //                                    #region Ciclo abstract area
+
+        //                                    int index_pos = (i * 1) + ((r - 8) * 2);
+
+        //                                    abs_aux_ciclo = lstCiclo[index_pos];  // 8 - 17 -> fuera
+        //                                    abs_aux_ciclo.set_x(x);
+        //                                    abs_aux_ciclo.set_y(y);
+
+        //                                    lstCiclo[index_pos] = abs_aux_ciclo;
+
+        //                                    my_pen = new Pen(Color.Silver, 1f);
+
+        //                                    #endregion
+        //                                }
+        //                                else
+        //                                {
+        //                                    if (r <= 21)
+        //                                    {
+        //                                        #region Semestre abstract area
+        //                                        int index_pos = (r - 21) + i;
+
+        //                                        abs_aux_semestre = lstSemestre[index_pos];
+        //                                        abs_aux_semestre.set_x(x);
+        //                                        abs_aux_semestre.set_y(y);
+
+        //                                        lstSemestre[index_pos] = abs_aux_semestre;
+
+        //                                        my_pen = new Pen(Color.Purple, 1f);
+
+        //                                        #endregion
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        if (r <= 25)
+        //                                        {
+        //                                            #region Turno abstract area
+        //                                            int index_pos = (r - 25) + i;
+
+
+        //                                            abs_aux_turno = lstTurno[index_pos];
+        //                                            abs_aux_turno.set_x(x);
+        //                                            abs_aux_turno.set_y(y);
+
+        //                                            lstTurno[index_pos] = abs_aux_turno;
+
+        //                                            my_pen = new Pen(Color.Orange, 1f);
+
+        //                                            #endregion
+        //                                        }
+        //                                    }
+
+        //                                }
+        //                            }
+
+
+        //                            if (!(r < 5 && i == 0))
+        //                            {
+        //                                e.Graphics.DrawEllipse(
+        //                                       my_pen,
+        //                                       x - lstCirculos.getRadio() / 2,
+        //                                       y - lstCirculos.getRadio() / 2,
+        //                                       lstCirculos.getRadio(), lstCirculos.getRadio());
+        //                            }
+
+        //                            #endregion
+        //                        }
+        //                        else
+        //                        {
+        //                            //All vertical lines that belong to AbsQuestion
+        //                            if (i > 2)
+        //                            {
+        //                                #region logic to save ordered obstract question to a lstAbsQuestions
+
+        //                                my_pen = new Pen(Color.Red, 1f);
+        //                                e.Graphics.DrawEllipse(
+        //                                        my_pen,
+        //                                        x - lstCirculos.getRadio() / 2,
+        //                                        y - lstCirculos.getRadio() / 2,
+        //                                        lstCirculos.getRadio(), lstCirculos.getRadio());
+
+
+        //                                //save abstract position on list
+        //                                if ((index_x % 2) == 1)
+        //                                {
+        //                                    //add in the first columna the object to the  list 
+        //                                    abs_question.set_x1(x);
+        //                                    abs_question.set_y1(y);
+
+        //                                    abs_question.set_idQuestion(index_y + (35 * aux_indice_columna));
+        //                                    abs_question.set_radio(lstCirculos.getRadio());
+
+        //                                    lstAbsQuestions[index_y + (35 * aux_indice_columna)] = abs_question;
+
+        //                                }
+        //                                else
+        //                                {
+        //                                    abs_aux_question.set_x1(lstAbsQuestions[index_y + (35 * aux_indice_columna)].get_x1());
+        //                                    abs_aux_question.set_y1(lstAbsQuestions[index_y + (35 * aux_indice_columna)].get_y1());
+
+        //                                    abs_aux_question.set_idQuestion(lstAbsQuestions[index_y].get_idQuestion());
+        //                                    abs_aux_question.set_radio(lstAbsQuestions[index_y].get_radio());
+
+        //                                    abs_aux_question.set_x2(x);
+        //                                    abs_aux_question.set_y2(y);
+        //                                    lstAbsQuestions[index_y + (35 * aux_indice_columna)] = abs_aux_question;
+
+        //                                }
+
+        //                                aux_count++;
+
+        //                                if (r == 34)
+        //                                {
+        //                                    //for debug
+        //                                    int ri = 0;
+        //                                }
+
+        //                                index_y++;
+
+
+
+        //                                if (aux_count % 70 == 0 && aux_count != 0)
+        //                                {
+        //                                    aux_indice_columna++;
+        //                                }
+        //                                if (aux_count >= 350)
+        //                                {// set all vallues to zero 
+
+        //                                }
+        //                                #endregion
+        //                            }
+
+        //                        }
+
+        //                    }
+
+        //                    //not delete this count
+        //                    index_x++;
+        //                    //----------------------
+
+        //                }
+        //                #endregion
+        //            }
+        //        }
+
+        //        #endregion
+
+        //        #region draw the 4 squares that can be drag and drop
+
+        //        for (int i = 0; i < lstCirculos.circles.Count; i++)
+        //        {
+        //            e.Graphics.DrawEllipse(
+        //                new Pen(Color.Black, 1f),
+        //                lstCirculos.circles[i].getX() - (lstCirculos.circles[i].getRadio() / 2),
+        //                lstCirculos.circles[i].getY() - (lstCirculos.circles[i].getRadio() / 2),
+        //                lstCirculos.circles[i].getRadio(), lstCirculos.circles[i].getRadio());
+        //        }
+
+        //        #endregion
+        //    }
+
+        //    #endregion
+
+        //    #region test - Drawing numbers of idQuestions
+        //    for (int i = 0; i < lstTurno.Count; i++)
+        //    {
+
+        //        //e.Graphics.DrawString((i + 1).ToString(), this.Font, Brushes.Black, lstAbsQuestions[i].get_x1(), lstAbsQuestions[i].get_y1());
+        //        //e.Graphics.DrawString((i + 1).ToString(), this.Font, Brushes.Red, lstAbsQuestions[i].get_x2(), lstAbsQuestions[i].get_y2());
+
+        //        //e.Graphics.DrawString(lstAbsDNI[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstAbsDNI[i].get_x(), lstAbsDNI[i].get_y());
+
+        //        //e.Graphics.DrawString(lstAbsOptions[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstAbsOptions[i].get_x(), lstAbsOptions[i].get_y());
+
+        //        //e.Graphics.DrawString(lstCiclo[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstCiclo[i].get_x(), lstCiclo[i].get_y());
+
+        //        //e.Graphics.DrawString(lstSemestre[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstSemestre[i].get_x(), lstSemestre[i].get_y());
+
+        //        //e.Graphics.DrawString(lstTurno[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstTurno[i].get_x(), lstTurno[i].get_y());
+
+
+
+        //    }
+        //    #endregion
+        //}
+  
+        #region 31  de diciembre
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            
-            #region dibujar mayas
+
+            #region dibujar mayas_corner
 
             float refPoint_X = 0;
             float refPoint_Y = 0;
@@ -3222,14 +4556,19 @@ namespace ExamenPsicoligico
             double dist_X_V = 0;
             double dist_Y_V = 0;
 
-            for (int k = 0; k < mayas.Count; k++)
+
+              
+            
+            
+            for (int k = 0; k < mayas_corner.Count ; k++)
             {
-                Circle lstCirculos = mayas[k];
+                Circle lstCirculos = mayas_corner[k];// 46 + 2 (drag & drop circles) =  48 insted (horizontal lines)
+                                                                             //  28        (vertical lines)
 
 
                 #region horizontal lines of the dynamic grid - Creation and Drawing
 
-                int numHorizontalLines = lstCirculos.getY();
+                int numHorizontalLines = (int)lstCirculos.getY();
 
                 double distHorizontal1 = lstCirculos.circles[2].y - lstCirculos.circles[0].y;
                 double intervalHorizonatal1 = distHorizontal1 / numHorizontalLines;
@@ -3255,7 +4594,7 @@ namespace ExamenPsicoligico
 
                 #region Vertical lines of the dynamic grid - Creation and Drawing - Creating lstAbsQuestion and lstAbsOnjects
 
-                int numVerticalLines = lstCirculos.getX();
+                int numVerticalLines = (int)lstCirculos.getX();
 
                 double distVertical1 = lstCirculos.circles[1].x - lstCirculos.circles[0].x;
                 double intervalVertical1 = distVertical1 / numVerticalLines;
@@ -3278,8 +4617,8 @@ namespace ExamenPsicoligico
                     //           new Point((int)((i * intervalVertical1) + lstCirculos.circles[0].x), (int)((i * intervalVerticalY1) + lstCirculos.circles[0].y)),
                     //           new Point((int)((i * intervalVertical2) + lstCirculos.circles[2].x), (int)((i * intervalVerticalY2) + lstCirculos.circles[2].y)));
                     #endregion
-
                     if (k < 2)
+                    //if(false)
                     {
                         #region Validation Areas of abstract DNI and Options Albergue
 
@@ -3290,9 +4629,9 @@ namespace ExamenPsicoligico
                         delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
 
                         int sign = 1;
-                        //if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
-                        if (lstCirculos.circles[2].x < lstCirculos.circles[0].x ||
-                            lstCirculos.circles[1].x < lstCirculos.circles[3].x)
+                        if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+                        //if (lstCirculos.circles[2].x < lstCirculos.circles[0].x ||
+                        //    lstCirculos.circles[1].x < lstCirculos.circles[3].x)
                             sign *= -1;
 
                         refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
@@ -3316,7 +4655,8 @@ namespace ExamenPsicoligico
 
                                 lstAbsDNI[pos] = abs_aux_DNI;
 
-                                my_pen = new Pen(Color.Green, 1f);
+                                //my_pen = new Pen(Color.Green, 1f);
+                                my_pen = new Pen(Color.LightGray, 1f);
 
                                 #endregion
                             }
@@ -3332,7 +4672,9 @@ namespace ExamenPsicoligico
                                 lstAbsOptions[pos] = abs_aux_option;
 
 
-                                my_pen = new Pen(Color.PaleVioletRed, 1f);
+                                //my_pen = new Pen(Color.PaleVioletRed, 1f);
+                                my_pen = new Pen(Color.LightGray, 1f);
+
 
                                 #endregion
                             }
@@ -3344,7 +4686,8 @@ namespace ExamenPsicoligico
                         }
                         #endregion
                     }
-                    else
+                    //else
+                    if(k==2)
                     {
                         #region Validating areas of abstract questions, Sedes, ciclo y turno
 
@@ -3407,13 +4750,14 @@ namespace ExamenPsicoligico
                                         #region Sedes Abstrac area
                                         if (i == 1)
                                         {
-                                            abs_aux_sede = lstSede[r];
+                                            abs_aux_sede = lstAbsSede[r];
                                             abs_aux_sede.set_x(x);
                                             abs_aux_sede.set_y(y);
 
-                                            lstSede[r] = abs_aux_sede;
+                                            lstAbsSede[r] = abs_aux_sede;
 
-                                            my_pen = new Pen(Color.Salmon, 1f);
+                                            //my_pen = new Pen(Color.Salmon, 1f);
+                                            my_pen = new Pen(Color.LightGray, 1f);
 
                                         }
                                         #endregion
@@ -3426,13 +4770,14 @@ namespace ExamenPsicoligico
 
                                             int index_pos = (i * 1) + ((r - 8) * 2);
 
-                                            abs_aux_ciclo = lstCiclo[index_pos];  // 8 - 17 -> fuera
+                                            abs_aux_ciclo = lstAbsCiclo[index_pos];  // 8 - 17 -> fuera
                                             abs_aux_ciclo.set_x(x);
                                             abs_aux_ciclo.set_y(y);
 
-                                            lstCiclo[index_pos] = abs_aux_ciclo;
+                                            lstAbsCiclo[index_pos] = abs_aux_ciclo;
 
-                                            my_pen = new Pen(Color.Silver, 1f);
+                                            //my_pen = new Pen(Color.Silver, 1f);
+                                            my_pen = new Pen(Color.LightGray, 1f);
 
                                             #endregion
                                         }
@@ -3443,13 +4788,14 @@ namespace ExamenPsicoligico
                                                 #region Semestre abstract area
                                                 int index_pos = (r - 21) + i;
 
-                                                abs_aux_semestre = lstSemestre[index_pos];
+                                                abs_aux_semestre = lstAbsSemestre[index_pos];
                                                 abs_aux_semestre.set_x(x);
                                                 abs_aux_semestre.set_y(y);
 
-                                                lstSemestre[index_pos] = abs_aux_semestre;
+                                                lstAbsSemestre[index_pos] = abs_aux_semestre;
 
-                                                my_pen = new Pen(Color.Purple, 1f);
+                                                //my_pen = new Pen(Color.Purple, 1f);
+                                                my_pen = new Pen(Color.LightGray, 1f);
 
                                                 #endregion
                                             }
@@ -3461,13 +4807,14 @@ namespace ExamenPsicoligico
                                                     int index_pos = (r - 25) + i;
 
 
-                                                    abs_aux_turno = lstTurno[index_pos];
+                                                    abs_aux_turno = lstAbsTurno[index_pos];
                                                     abs_aux_turno.set_x(x);
                                                     abs_aux_turno.set_y(y);
 
-                                                    lstTurno[index_pos] = abs_aux_turno;
+                                                    lstAbsTurno[index_pos] = abs_aux_turno;
 
-                                                    my_pen = new Pen(Color.Orange, 1f);
+                                                    //my_pen = new Pen(Color.Orange, 1f);
+                                                    my_pen = new Pen(Color.LightGray, 1f);
 
                                                     #endregion
                                                 }
@@ -3495,7 +4842,9 @@ namespace ExamenPsicoligico
                                     {
                                         #region logic to save ordered obstract question to a lstAbsQuestions
 
-                                        my_pen = new Pen(Color.Red, 1f);
+                                        //my_pen = new Pen(Color.Red, 1f);
+                                        my_pen = new Pen(Color.LightGray, 1f);
+                                        
                                         e.Graphics.DrawEllipse(
                                                 my_pen,
                                                 x - lstCirculos.getRadio() / 2,
@@ -3564,28 +4913,101 @@ namespace ExamenPsicoligico
                         }
                         #endregion
                     }
+
+                    if (k == 3)
+                    {
+                        #region Validating areas of abstract questions, Sedes, ciclo y turno
+
+                        if (i != 0 && i != COLUMNAS)
+                        {
+                            dist_X_V = Math.Abs(((i * intervalVertical1) + lstCirculos.circles[0].x) - ((i * intervalVertical2) + lstCirculos.circles[2].x));
+                            dist_Y_V = Math.Abs(((i * intervalVerticalY1) + lstCirculos.circles[0].y) - ((i * intervalVerticalY2) + lstCirculos.circles[2].y));
+
+                            delta_X_V = (dist_X_V * 1.0 / numHorizontalLines);
+                            delta_Y_V = (dist_Y_V * 1.0 / numHorizontalLines);
+
+
+                            int sign = 1;
+                            if (lstCirculos.circles[2].x < lstCirculos.circles[0].x)
+                                sign *= -1;
+
+                            refPoint_X = (float)((i * intervalVertical1) + lstCirculos.circles[0].x);
+                            refPoint_Y = (float)((i * intervalVerticalY1) + lstCirculos.circles[0].y);
+
+                            int index_y = 0;
+
+                            //pass throug of all the validated horizontal lines
+                            for (int r = 0; r <= numHorizontalLines; r++)
+                            {
+                                float x = (refPoint_X + (r * (float)delta_X_V * sign));
+                                float y = (refPoint_Y + (r * (float)delta_Y_V));
+
+                                //All vertical lines that belong to Sede , ciclo y turno
+                                //avoiding not desiered horizontal lines
+                                if (true)
+                                {
+                                    //All vertical lines that belong to AbsQuestion
+                                    //if (i > 2)
+                                    if (r != 0 && r!= FILAS)
+                                    //if(true)
+                                    {
+                                        #region logic to save ordered obstract question to a lstAbsQuestions
+
+                                        //my_pen = new Pen(Color.Gray, 1f);
+                                        //e.Graphics.DrawEllipse(
+                                        //        my_pen,
+                                        //        x - lstCirculos.getRadio() / 2,
+                                        //        y - lstCirculos.getRadio() / 2,
+                                        //        lstCirculos.getRadio(), lstCirculos.getRadio());
+
+
+
+                                        abs_big_maya.set_x1(x);
+                                        abs_big_maya.set_y1(y);
+
+                                        abs_big_maya.set_idQuestion(index_x);
+                                        abs_big_maya.set_radio(lstCirculos.getRadio());
+
+
+                                        lstAbsBigMaya[index_x] = abs_big_maya;
+                                        index_x++;
+
+
+                                        #endregion
+                                    }
+
+                                }
+
+                            }
+
+                            float rr = lstAbsBigMaya[13].get_y1();
+                        }
+                        #endregion
+                    }
                 }
 
                 #endregion
 
                 #region draw the 4 squares that can be drag and drop
-
-                for (int i = 0; i < lstCirculos.circles.Count; i++)
+                if (k == 3)
                 {
-                    e.Graphics.DrawEllipse(
-                        new Pen(Color.Black, 1f),
-                        lstCirculos.circles[i].getX() - (lstCirculos.circles[i].getRadio() / 2),
-                        lstCirculos.circles[i].getY() - (lstCirculos.circles[i].getRadio() / 2),
-                        lstCirculos.circles[i].getRadio(), lstCirculos.circles[i].getRadio());
+                    for (int i = 0; i < lstCirculos.circles.Count; i++)
+                    {
+                        e.Graphics.DrawRectangle(
+                            new Pen(Color.Red, 2f),
+                            lstCirculos.circles[i].getX() - (lstCirculos.circles[i].getRadio() / 2),
+                            lstCirculos.circles[i].getY() - (lstCirculos.circles[i].getRadio() / 2),
+                            lstCirculos.circles[i].getRadio(), lstCirculos.circles[i].getRadio());
+                    }
                 }
-
                 #endregion
             }
 
             #endregion
 
             #region test - Drawing numbers of idQuestions
-            for (int i = 0; i < lstTurno.Count; i++)
+            int index = 0;
+            for (int i = 0; i < lstAbsBigMaya.Count; i++)
             {
 
                 //e.Graphics.DrawString((i + 1).ToString(), this.Font, Brushes.Black, lstAbsQuestions[i].get_x1(), lstAbsQuestions[i].get_y1());
@@ -3601,23 +5023,48 @@ namespace ExamenPsicoligico
 
                 //e.Graphics.DrawString(lstTurno[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstTurno[i].get_x(), lstTurno[i].get_y());
 
+                //e.Graphics.DrawString(lstTurno[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstTurno[i].get_x(), lstTurno[i].get_y());
 
+//                lstAbsBigMaya[i].set_idQuestion(index);
 
+//                FontFamily fontFamily = new FontFamily("Arial");
+//Font f = new Font(
+//   fontFamily,
+//   6,
+//   FontStyle.Regular,
+//   GraphicsUnit.Pixel);
+
+//                e.Graphics.DrawString(lstAbsBigMaya[i].get_idQuestion().ToString(), f, Brushes.Black, lstAbsBigMaya[i].get_x1(), lstAbsBigMaya[i].get_y1());
+                //e.Graphics.DrawString(lstAbsBigMaya[i].get_idQuestion().ToString(), this.Font, Brushes.Red, lstAbsBigMaya[i].get_x2(), lstAbsBigMaya[i].get_y2());
+
+                index++;
             }
             #endregion
         }
+
+
+        #endregion
 
         #region Methods of Mayas
 
         public void CleanAllList()
         {
+
+            //txtCode=-1;
+            opcion_01 = -1;
+            opcion_02 = -1;
+            codigo_sede = -1;
+            num_01 = -1;
+            num_02 = -1;
+            codigo_semestre = -1;
+            codigo_turno = -1;
             //Question
 
             for (int k = 0; k < lstAbsQuestions.Count(); k++)
             {
                 AbstractQuestion absQuestion = new AbstractQuestion();
                 absQuestion = lstAbsQuestions[k];
-                absQuestion.set_respuesta(-999);
+                absQuestion.set_respuesta(-1);
                 lstAbsQuestions[k] = absQuestion;
             }
 
@@ -3643,42 +5090,42 @@ namespace ExamenPsicoligico
 
             //Sede
 
-            for (int j = 0; j < lstSede.Count(); j++)
+            for (int j = 0; j < lstAbsSede.Count(); j++)
             {
                 AbstractObject absSede = new AbstractObject();
-                absSede = lstSede[j];
+                absSede = lstAbsSede[j];
                 absSede.set_respuesta(-1);
-                lstSede[j] = absSede;
+                lstAbsSede[j] = absSede;
             }
 
             //Ciclo
 
-            for (int j = 0; j < lstCiclo.Count(); j++)
+            for (int j = 0; j < lstAbsCiclo.Count(); j++)
             {
                 AbstractObject absCiclo = new AbstractObject();
-                absCiclo = lstCiclo[j];
+                absCiclo = lstAbsCiclo[j];
                 absCiclo.set_respuesta(-1);
-                lstCiclo[j] = absCiclo;
+                lstAbsCiclo[j] = absCiclo;
             }
 
             //Semestre
 
-            for (int j = 0; j < lstSemestre.Count(); j++)
+            for (int j = 0; j < lstAbsSemestre.Count(); j++)
             {
                 AbstractObject absSemestre = new AbstractObject();
-                absSemestre = lstSemestre[j];
+                absSemestre = lstAbsSemestre[j];
                 absSemestre.set_respuesta(-1);
-               lstSemestre[j] = absSemestre;
+               lstAbsSemestre[j] = absSemestre;
             }
 
             //turno
 
-            for (int j = 0; j < lstTurno.Count(); j++)
+            for (int j = 0; j < lstAbsTurno.Count(); j++)
             {
                 AbstractObject absTurno = new AbstractObject();
-                absTurno = lstTurno[j];
+                absTurno = lstAbsTurno[j];
                 absTurno.set_respuesta(-1);
-                lstTurno[j] = absTurno;
+                lstAbsTurno[j] = absTurno;
             }
 
 
@@ -3687,7 +5134,6 @@ namespace ExamenPsicoligico
         public void FillingAnswersToAbstractObject()
         {
             //Question
-
             for (int k = 0; k < lstAbsQuestions.Count(); k++)
             {
                     AbstractQuestion absQuestion = lstAbsQuestions[k];
@@ -3725,14 +5171,16 @@ namespace ExamenPsicoligico
                 for (int i = 0; i < contoursPositions.Count(); i++)
                 {
                     CountorsPositions contour = contoursPositions[i];
-
-                    double dist = Math.Pow((contour.x / scala_x - absDNI.get_x()), 2) + Math.Pow((contour.y / scala_y - absDNI.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absDNI.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absDNI.set_respuesta(1);
-                        lstAbsDNI[j] = absDNI;
-                    }
+                        double dist = Math.Pow((contour.x / scala_x - absDNI.get_x()), 2) + Math.Pow((contour.y / scala_y - absDNI.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res < absDNI.get_radio() / 2)
+                        {
+                            absDNI.set_respuesta(1);
+                            lstAbsDNI[j] = absDNI;
+                        }                      
+                    }                      
 
                 }
             }
@@ -3746,12 +5194,15 @@ namespace ExamenPsicoligico
                 {
                     CountorsPositions contour = contoursPositions[i];
 
-                    double dist = Math.Pow((contour.x / scala_x - absOpcion.get_x()), 2) + Math.Pow((contour.y / scala_y - absOpcion.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absOpcion.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absOpcion.set_respuesta(1);
-                        lstAbsOptions[j] = absOpcion;
+                        double dist = Math.Pow((contour.x / scala_x - absOpcion.get_x()), 2) + Math.Pow((contour.y / scala_y - absOpcion.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res <= absOpcion.get_radio() / 2)
+                        {
+                            absOpcion.set_respuesta(1);
+                            lstAbsOptions[j] = absOpcion;
+                        }
                     }
 
                 }
@@ -3759,19 +5210,22 @@ namespace ExamenPsicoligico
 
             //Sede
 
-            for (int j = 0; j < lstSede.Count(); j++)
+            for (int j = 0; j < lstAbsSede.Count(); j++)
             {
-                AbstractObject absSede = lstSede[j];
+                AbstractObject absSede = lstAbsSede[j];
                 for (int i = 0; i < contoursPositions.Count(); i++)
                 {
                     CountorsPositions contour = contoursPositions[i];
 
-                    double dist = Math.Pow((contour.x / scala_x - absSede.get_x()), 2) + Math.Pow((contour.y / scala_y - absSede.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absSede.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absSede.set_respuesta(1);
-                        lstSede[j] = absSede;
+                        double dist = Math.Pow((contour.x / scala_x - absSede.get_x()), 2) + Math.Pow((contour.y / scala_y - absSede.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res <= absSede.get_radio() / 2)
+                        {
+                            absSede.set_respuesta(1);
+                            lstAbsSede[j] = absSede;
+                        }
                     }
 
                 }
@@ -3779,19 +5233,22 @@ namespace ExamenPsicoligico
 
             //Ciclo
 
-            for (int j = 0; j < lstCiclo.Count(); j++)
+            for (int j = 0; j < lstAbsCiclo.Count(); j++)
             {
-                AbstractObject absCiclo = lstCiclo[j];
+                AbstractObject absCiclo = lstAbsCiclo[j];
                 for (int i = 0; i < contoursPositions.Count(); i++)
                 {
                     CountorsPositions contour = contoursPositions[i];
 
-                    double dist = Math.Pow((contour.x / scala_x - absCiclo.get_x()), 2) + Math.Pow((contour.y / scala_y - absCiclo.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absCiclo.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absCiclo.set_respuesta(1);
-                        lstCiclo[j] = absCiclo;
+                        double dist = Math.Pow((contour.x / scala_x - absCiclo.get_x()), 2) + Math.Pow((contour.y / scala_y - absCiclo.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res <= absCiclo.get_radio() / 2)
+                        {
+                            absCiclo.set_respuesta(1);
+                            lstAbsCiclo[j] = absCiclo;
+                        }
                     }
 
                 }
@@ -3799,19 +5256,22 @@ namespace ExamenPsicoligico
 
             //Semestre
 
-            for (int j = 0; j < lstSemestre.Count(); j++)
+            for (int j = 0; j < lstAbsSemestre.Count(); j++)
             {
-                AbstractObject absSemestre = lstSemestre[j];
+                AbstractObject absSemestre = lstAbsSemestre[j];
                 for (int i = 0; i < contoursPositions.Count(); i++)
                 {
                     CountorsPositions contour = contoursPositions[i];
 
-                    double dist = Math.Pow((contour.x / scala_x - absSemestre.get_x()), 2) + Math.Pow((contour.y / scala_y - absSemestre.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absSemestre.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absSemestre.set_respuesta(1);
-                        lstSemestre[j] = absSemestre;
+                        double dist = Math.Pow((contour.x / scala_x - absSemestre.get_x()), 2) + Math.Pow((contour.y / scala_y - absSemestre.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res <= absSemestre.get_radio() / 2)
+                        {
+                            absSemestre.set_respuesta(1);
+                            lstAbsSemestre[j] = absSemestre;
+                        }
                     }
 
                 }
@@ -3819,26 +5279,26 @@ namespace ExamenPsicoligico
 
             //turno
 
-            for (int j = 0; j < lstTurno.Count(); j++)
+            for (int j = 0; j < lstAbsTurno.Count(); j++)
             {
-                AbstractObject absTurno = lstTurno[j];
+                AbstractObject absTurno = lstAbsTurno[j];
                 for (int i = 0; i < contoursPositions.Count(); i++)
                 {
                     CountorsPositions contour = contoursPositions[i];
 
-                    double dist = Math.Pow((contour.x / scala_x - absTurno.get_x()), 2) + Math.Pow((contour.y / scala_y - absTurno.get_y()), 2);
-                    double res = Math.Sqrt(dist);
-                    if (res <= absTurno.get_radio() / 2)
+                    if (contour.area > LIMITE_AREA_RESPUESTA)
                     {
-                        absTurno.set_respuesta(1);
-                        lstTurno[j] = absTurno;
+                        double dist = Math.Pow((contour.x / scala_x - absTurno.get_x()), 2) + Math.Pow((contour.y / scala_y - absTurno.get_y()), 2);
+                        double res = Math.Sqrt(dist);
+                        if (res <= absTurno.get_radio() / 2)
+                        {
+                            absTurno.set_respuesta(1);
+                            lstAbsTurno[j] = absTurno;
+                        }
                     }
 
                 }
             }
-
-            int uu = 1;
-
         }
 
         public void FillingAnswerstToFinalQuestionsList()
@@ -3846,17 +5306,17 @@ namespace ExamenPsicoligico
 
             //Questions
             Question question = new Question();
-            string result = "";
+            string result ="";
 
             for (int i = 0; i < lstAbsQuestions.Count(); i++)
             {
 
                 if (lstAbsQuestions[i].get_respuesta() == 0)
-                { result = "°-°"; }
+                { result = empty; }
                 if (lstAbsQuestions[i].get_respuesta() == 1)
-                { result = "Verdadero"; }
+                { result = "V"; }
                 if (lstAbsQuestions[i].get_respuesta() == 2)
-                { result = "Falso";}
+                { result = "F";}
 
                 question.fillQuestion(lstAbsQuestions[i].get_idQuestion(), result);
                 questions.Add(question);
@@ -3895,26 +5355,26 @@ namespace ExamenPsicoligico
             
             //Sede
            
-            for (int i = 0; i < lstSede.Count(); i++)
+            for (int i = 0; i < lstAbsSede.Count(); i++)
             {
-                if (lstSede[i].get_respuesta() == 1)
-                    codigo_sede = lstSede[i].get_idQuestion();
+                if (lstAbsSede[i].get_respuesta() == 1)
+                    codigo_sede = lstAbsSede[i].get_idQuestion();
             }
 
             //Ciclo
             
-            for (int j = 0; j < 10; j++)
+            for (int j = 0; j < 2; j++)
             {
                 int aux_count = 0;
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     int pos = j + (i * 2);
-                    if (lstCiclo[pos].get_respuesta() == 1)
+                    if (lstAbsCiclo[pos].get_respuesta() == 1)
                     {
                         if (j == 0)
-                        { num_01 = lstCiclo[pos].get_idQuestion(); }
-                        else
-                        { num_02 = lstCiclo[pos].get_idQuestion(); }
+                        { num_01 = lstAbsCiclo[pos].get_idQuestion(); }
+                        if (j == 1 )
+                        { num_02 = lstAbsCiclo[pos].get_idQuestion(); }
                     }
                     else
                         aux_count++;
@@ -3924,19 +5384,19 @@ namespace ExamenPsicoligico
 
             //semestre
             
-            for (int i = 0; i < lstSemestre.Count(); i++)
+            for (int i = 0; i < lstAbsSemestre.Count(); i++)
             {
-                if (lstSemestre[i].get_respuesta() == 1)
-                    codigo_semestre = lstSemestre[i].get_idQuestion();
+                if (lstAbsSemestre[i].get_respuesta() == 1)
+                    codigo_semestre = lstAbsSemestre[i].get_idQuestion();
             }
 
             //turno
             
 
-            for (int i = 0; i < lstTurno.Count(); i++)
+            for (int i = 0; i < lstAbsTurno.Count(); i++)
             {
-                if (lstTurno[i].get_respuesta() == 1)
-                    codigo_turno = lstTurno[i].get_idQuestion();
+                if (lstAbsTurno[i].get_respuesta() == 1)
+                    codigo_turno = lstAbsTurno[i].get_idQuestion();
             }
 
 
@@ -3968,15 +5428,15 @@ namespace ExamenPsicoligico
             
         }
 
-
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
+            
             MouseEventArgs me = (MouseEventArgs)e;
             Point mc = me.Location;
 
-            for (int k = 0; k < mayas.Count; k++)
+            for (int k = 0; k < mayas_corner.Count; k++)
             {
-                Circle lstCirculos = mayas[k];
+                Circle lstCirculos = mayas_corner[k];
                 for (int i = 0; i < lstCirculos.circles.Count; i++)
                 {
                     double dist = Math.Pow((mc.X - lstCirculos.circles[i].getX()), 2) + Math.Pow((mc.Y - lstCirculos.circles[i].getY()), 2);
@@ -3989,14 +5449,42 @@ namespace ExamenPsicoligico
                 }
             }
 
+
+            //mayas_corner[3].circles[0].set_X(mayas_corner[3].circles[0].getX());
+            //mayas_corner[3].circles[0].set_Y(listSquares[8].center.Y);
+            //mayas_corner[3].circles[1].set_X(listSquares[12].center.X);
+            //mayas_corner[3].circles[1].set_Y(listSquares[12].center.Y);
+            //mayas_corner[3].circles[2].set_X(listSquares[4].center.X);
+            //mayas_corner[3].circles[2].set_Y(listSquares[4].center.Y);
+            //mayas_corner[3].circles[3].set_X(listSquares[0].center.X);
+            //mayas_corner[3].circles[3].set_Y(listSquares[0].center.Y);
+
+
+            //PointF p1 = new PointF(lstAbsBigMaya[894].get_x1(), lstAbsBigMaya[894].get_y1());
+            //PointF p2 = new PointF(lstAbsBigMaya[1223].get_x1(), lstAbsBigMaya[1223].get_y1());
+            //PointF p3 = new PointF(lstAbsBigMaya[903].get_x1(), lstAbsBigMaya[903].get_y1());
+            //PointF p4 = new PointF(lstAbsBigMaya[1232].get_x1(), lstAbsBigMaya[1232].get_y1());
+            //set_drag_points_of_mayas_dni(p1, p2, p3, p4);
+
+            //p1 = new PointF(lstAbsBigMaya[663].get_x1(), lstAbsBigMaya[663].get_y1());
+            //p2 = new PointF(lstAbsBigMaya[710].get_x1(), lstAbsBigMaya[710].get_y1());
+            //p3 = new PointF(lstAbsBigMaya[667].get_x1(), lstAbsBigMaya[667].get_y1());
+            //p4 = new PointF(lstAbsBigMaya[714].get_x1(), lstAbsBigMaya[714].get_y1());
+            //set_drag_points_of_mayas_options(p1, p2, p3, p4);
+
+            //p1 = new PointF(lstAbsBigMaya[13].get_x1(), lstAbsBigMaya[13].get_y1());
+            //p2 = new PointF(lstAbsBigMaya[1235].get_x1(), lstAbsBigMaya[1235].get_y1());
+            //p3 = new PointF(lstAbsBigMaya[47].get_x1(), lstAbsBigMaya[47].get_y1());
+            //p4 = new PointF(lstAbsBigMaya[1269].get_x1(), lstAbsBigMaya[1269].get_y1());
+            //set_drag_points_of_mayas_answers(p1, p2, p3, p4);
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
 
-            for (int k = 0; k < mayas.Count; k++)
+            for (int k = 0; k < mayas_corner.Count; k++)
             {
-                Circle lstCirculos = mayas[k];
+                Circle lstCirculos = mayas_corner[k];
 
                 for (int i = 0; i < lstCirculos.circles.Count; i++)
                 {
@@ -4011,13 +5499,15 @@ namespace ExamenPsicoligico
                 }
             }
 
+            //in this secction it must be set the main drag points of mayas_corner
+
         }
 
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
-            for (int k = 0; k < mayas.Count; k++)
+            for (int k = 0; k < mayas_corner.Count; k++)
             {
-                Circle lstCirculos = mayas[k];
+                Circle lstCirculos = mayas_corner[k];
 
                 for (int i = 0; i < lstCirculos.circles.Count; i++)
                 {
@@ -4037,12 +5527,51 @@ namespace ExamenPsicoligico
 
         #endregion
 
-        private void btnInit_Click(object sender, EventArgs e)
-        {
-            flag_init = true;
-        }
+       
 
         #endregion
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            pictureBox1.Visible = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            dataGridView1.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            if (this.dataGridView1.GetClipboardContent() != null)
+                Clipboard.SetDataObject(
+                this.dataGridView1.GetClipboardContent());
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_HelpButtonClicked(object sender, CancelEventArgs e)
+        {
+
+        }
+
+        private void dataGridView1_CursorChanged(object sender, EventArgs e)
+        {
+            String hola = "fdasfs";
+        }
+
+        private void txtTotalApplicants_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        
+
+
 
     }
 }
